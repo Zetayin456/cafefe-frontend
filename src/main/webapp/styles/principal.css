@@ -1,0 +1,43 @@
+/* Variables CSS globales (Paleta de colores) */
+:root {
+    --color-primario: #5d8aa8;
+    --color-secundario: #f59e0b;
+    --color-fondo: #f4f4f9;
+    --color-texto: #1f2937;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: var(--color-fondo);
+    color: var(--color-texto);
+}
+
+/* Layout en CSS Grid Bidimensional */
+.main-layout {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas:
+        "encabezado encabezado"
+        "navegacion hoja"
+        "pie        pie";
+    min-height: 100vh;
+}
+
+.encabezado { grid-area: encabezado; background-color: var(--color-primario); color: white; padding: 10px 20px; }
+.navegacion { grid-area: navegacion; background-color: #e5e7eb; padding: 15px; }
+.hoja       { grid-area: hoja; padding: 20px; }
+.pie        { grid-area: pie; background-color: #374151; color: white; text-align: center; padding: 10px; }
+
+/* Diseños Adaptativos (Media Queries) */
+@media screen and (max-width: 600px) {
+    .main-layout {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "encabezado"
+            "hoja"
+            "navegacion"
+            "pie";
+    }
+}

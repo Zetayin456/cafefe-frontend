@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "chrome",
+      "request": "launch",
+      "name": "Depurar Frontend con BrowserSync",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}/src/main/webapp",
+      "preLaunchTask": "Iniciar BrowserSync"
+    }
+  ]
+}

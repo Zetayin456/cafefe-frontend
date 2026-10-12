@@ -1,10 +1,46 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <title>Start Page</title>
-        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    </head>
-    <body>
-        <h1>Hello World!</h1>
-    </body>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cafefe POS - Frontend</title>
+    <link rel="stylesheet" href="styles/principal.css">
+</head>
+<body>
+    <div class="main-layout">
+        <header class="encabezado">
+            <h1>Cafefe POS</h1>
+            <h2>Gestión de Órdenes y Productos</h2>
+        </header>
+
+        <nav class="navegacion">
+            <h3>Módulos</h3>
+            <ul>
+                <li><a href="#productos">Productos</a></li>
+                <li><a href="#ordenes">Órdenes</a></li>
+                <li><a href="#descuentos">Descuentos</a></li>
+            </ul>
+        </nav>
+
+        <article class="hoja">
+            <h2>Módulo de Creación</h2>
+            <form id="frmFrontend">
+                <label for="nombre">Nombre:</label>
+                <input type="text" id="nombre" name="nombre" required>
+
+                <button type="button" id="btnGuardar">Guardar</button>
+            </form>
+
+            <!-- Elemento para mostrar el Web Worker en pantalla -->
+            <hr>
+            <p>Contador del Worker (Hilo secundario): <strong id="resultado">0</strong></p>
+        </article>
+
+        <footer class="pie">
+            <p>© 2026 Universidad de El Salvador - PPI115</p>
+        </footer>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
 </html>
