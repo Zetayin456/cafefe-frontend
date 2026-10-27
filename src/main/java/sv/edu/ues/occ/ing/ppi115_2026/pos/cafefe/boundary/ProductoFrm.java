@@ -1,3 +1,4 @@
+
 package sv.edu.ues.occ.ing.ppi115_2026.pos.cafefe.boundary;
 
 import jakarta.annotation.PostConstruct;
@@ -7,8 +8,12 @@ import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import sv.edu.ues.occ.ing.ppi115_2026.pos.cafefe.control.ProductoDAOInterface;
 import sv.edu.ues.occ.ing.ppi115_2026.pos.cafefe.entity.Producto;
 
@@ -17,6 +22,9 @@ import sv.edu.ues.occ.ing.ppi115_2026.pos.cafefe.entity.Producto;
 public class ProductoFrm implements Serializable {
 
     private static final long serialVersionUID = 1L;
+
+    private static final Logger LOGGER =
+            Logger.getLogger(ProductoFrm.class.getName());
 
     @Inject
     private ProductoDAOInterface productoDAO;
@@ -31,42 +39,134 @@ public class ProductoFrm implements Serializable {
     }
 
     public void nuevoRegistro() {
-        this.registroSeleccionado = new Producto();
-        this.registroSeleccionado.setActivo(true);
+        registroSeleccionado = new Producto();
+        registroSeleccionado.setActivo(true);
     }
 
     public void cargarDatos() {
         try {
-            this.listaProductos = productoDAO.findRange(0, 100);
+            List<Producto> productos = productoDAO.findRange(0, 1000);
+
+            listaProductos = productos != null
+                    ? productos : new ArrayList<>();
+
         } catch (Exception e) {
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "No se pudieron cargar los productos"));
+            LOGGER.log(Level.SEVERE, "Error al cargar productos", e);
+            mensaje(FacesMessage.SEVERITY_ERROR,
+                    "Error", "No se pudieron cargar los productos.");
         }
+    }
+
+    public void seleccionar(Producto producto) {
+        if (producto == null) {
+            return;
+        }
+
+        // Copiamos los datos para editar el registro.
+        registroSeleccionado = new Producto();
+        registroSeleccionado.setIdProducto(producto.getIdProducto());
+        registroSeleccionado.setNombre(producto.getNombre());
+        registroSeleccionado.setPrecioSugerido(producto.getPrecioSugerido());
+        registroSeleccionado.setActivo(producto.getActivo());
+        registroSeleccionado.setComentarios(producto.getComentarios());
     }
 
     public void guardar() {
         try {
-            if (registroSeleccionado != null) {
-                if (registroSeleccionado.getIdProducto() == null) {
-                    registroSeleccionado.setIdProducto(UUID.randomUUID());
-                    productoDAO.create(registroSeleccionado);
-                    FacesContext.getCurrentInstance().addMessage(null,
-                            new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Producto guardado correctamente"));
-                } else {
-                    productoDAO.edit(registroSeleccionado);
-                    FacesContext.getCurrentInstance().addMessage(null,
-                            new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Producto actualizado correctamente"));
-                }
-                nuevoRegistro();
-                cargarDatos();
+            if (registroSeleccionado == null) {
+                mensaje(FacesMessage.SEVERITY_WARN,
+                        "Aviso", "No hay un producto seleccionado.");
+                return;
             }
+
+            String nombre = registroSeleccionado.getNombre();
+            BigDecimal precio = registroSeleccionado.getPrecioSugerido();
+
+            if (nombre == null || nombre.isBlank()) {
+                mensaje(FacesMessage.SEVERITY_WARN,
+                        "Validación", "Escribe el nombre del producto.");
+                return;
+            }
+
+            if (nombre.trim().length() > 155) {
+                mensaje(FacesMessage.SEVERITY_WARN,
+                        "Validación",
+                        "El nombre no puede superar los 155 caracteres.");
+                return;
+            }
+
+            if (precio == null || precio.compareTo(BigDecimal.ZERO) <= 0) {
+                mensaje(FacesMessage.SEVERITY_WARN,
+                        "Validación", "El precio debe ser mayor que cero.");
+                return;
+            }
+
+            registroSeleccionado.setNombre(nombre.trim());
+
+            if (registroSeleccionado.getActivo() == null) {
+                registroSeleccionado.setActivo(true);
+            }
+
+            if (registroSeleccionado.getIdProducto() == null) {
+                registroSeleccionado.setIdProducto(UUID.randomUUID());
+                productoDAO.create(registroSeleccionado);
+
+                mensaje(FacesMessage.SEVERITY_INFO,
+                        "Éxito", "Producto creado correctamente.");
+            } else {
+                productoDAO.edit(registroSeleccionado);
+
+                mensaje(FacesMessage.SEVERITY_INFO,
+                        "Éxito", "Producto actualizado correctamente.");
+            }
+
+            nuevoRegistro();
+            cargarDatos();
+
         } catch (Exception e) {
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Error al guardar el producto"));
+            LOGGER.log(Level.SEVERE, "Error al guardar producto", e);
+            mensaje(FacesMessage.SEVERITY_ERROR,
+                    "Error", "No se pudo guardar el producto.");
         }
     }
 
-    // Getters y Setters
+    public void eliminarLogicamente(Producto producto) {
+        if (producto == null || producto.getIdProducto() == null) {
+            mensaje(FacesMessage.SEVERITY_WARN,
+                    "Aviso", "Selecciona un producto válido.");
+            return;
+        }
+
+        try {
+            // No se borra de la base de datos.
+            // Solo se marca como inactivo.
+            producto.setActivo(false);
+            productoDAO.edit(producto);
+
+            if (registroSeleccionado != null
+                    && producto.getIdProducto().equals(
+                            registroSeleccionado.getIdProducto())) {
+                nuevoRegistro();
+            }
+
+            cargarDatos();
+
+            mensaje(FacesMessage.SEVERITY_INFO,
+                    "Éxito", "Producto desactivado correctamente.");
+
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE, "Error al desactivar producto", e);
+            mensaje(FacesMessage.SEVERITY_ERROR,
+                    "Error", "No se pudo desactivar el producto.");
+        }
+    }
+
+    private void mensaje(FacesMessage.Severity severidad,
+                         String titulo, String detalle) {
+        FacesContext.getCurrentInstance().addMessage(
+                null, new FacesMessage(severidad, titulo, detalle));
+    }
+
     public List<Producto> getListaProductos() {
         return listaProductos;
     }

@@ -1,3 +1,4 @@
+
 <?xml version="1.0" encoding="UTF-8"?>
 <ui:composition xmlns="http://www.w3.org/1999/xhtml"
                 xmlns:ui="jakarta.faces.facelets"
@@ -17,73 +18,186 @@
     <ui:define name="contenido">
 
         <h:form id="frmDescuento">
+
+            <p:messages id="mensajes" showDetail="true"
+                        closable="true">
+                <p:autoUpdate />
+            </p:messages>
+
             <p:panel header="Registro de Descuento">
+
                 <h:panelGrid columns="2" cellpadding="5">
-                    <p:outputLabel for="cboTipo" value="Tipo de Descuento: *" />
-                    <p:selectOneMenu id="cboTipo" 
-                                     value="#{descuentoFrm.idTipoDescuentoSeleccionado}" 
-                                     disabled="#{descuentoFrm.registro.idDescuento != null}" 
-                                     required="true">
-                        <f:selectItem itemLabel="-- Seleccione Tipo Activo --" itemValue="#{null}" noSelectionOption="true" />
-                        <f:selectItems value="#{descuentoFrm.listaTiposDescuento}" 
-                                       var="td" 
-                                       itemLabel="#{td.nombre} (Máx: #{td.descuentoMaximo}%)" 
-                                       itemValue="#{td.idTipoDescuento}" />
+
+                    <p:outputLabel for="cboTipo"
+                                   value="Tipo de Descuento: *" />
+
+                    <p:selectOneMenu id="cboTipo"
+                                     value="#{descuentoFrm.idTipoDescuentoSeleccionado}"
+                                     required="true"
+                                     requiredMessage="Selecciona un tipo de descuento.">
+
+                        <f:selectItem
+                            itemLabel="-- Seleccione Tipo Activo --"
+                            itemValue="#{null}"
+                            noSelectionOption="true" />
+
+                        <f:selectItems
+                            value="#{descuentoFrm.listaTiposDescuento}"
+                            var="td"
+                            itemLabel="#{td.nombre} (Máx: #{td.descuentoMaximo}%)"
+                            itemValue="#{td.idTipoDescuento}" />
                     </p:selectOneMenu>
 
-                    <p:outputLabel for="nombre" value="Nombre del Descuento: *" />
-                    <p:inputText id="nombre" value="#{descuentoFrm.registro.nombre}" required="true" />
+                    <p:outputLabel for="nombre"
+                                   value="Nombre del Descuento: *" />
 
-                    <p:outputLabel for="fechaDesde" value="Fecha Desde:" />
-                    <p:datePicker id="fechaDesde" value="#{descuentoFrm.registro.fechaDesde}" showTime="true" pattern="dd/MM/yyyy HH:mm" />
+                    <p:inputText id="nombre"
+                                 value="#{descuentoFrm.registro.nombre}"
+                                 required="true"
+                                 maxlength="155"
+                                 requiredMessage="Escribe el nombre del descuento." />
 
-                    <p:outputLabel for="fechaHasta" value="Fecha Hasta (Opcional):" />
-                    <p:datePicker id="fechaHasta" value="#{descuentoFrm.registro.fechaHasta}" showTime="true" pattern="dd/MM/yyyy HH:mm" />
+                    <p:outputLabel for="fechaDesde"
+                                   value="Fecha Desde:" />
 
-                    <p:outputLabel for="obs" value="Observaciones:" />
-                    <p:inputTextarea id="obs" value="#{descuentoFrm.registro.observaciones}" rows="3" cols="30" />
+                    <p:datePicker id="fechaDesde"
+                                  value="#{descuentoFrm.registro.fechaDesde}"
+                                  showTime="true"
+                                  pattern="dd/MM/yyyy HH:mm"
+                                  showIcon="true" />
+
+                    <p:outputLabel for="fechaHasta"
+                                   value="Fecha Hasta (Opcional):" />
+
+                    <p:datePicker id="fechaHasta"
+                                  value="#{descuentoFrm.registro.fechaHasta}"
+                                  showTime="true"
+                                  pattern="dd/MM/yyyy HH:mm"
+                                  showIcon="true" />
+
+                    <p:outputLabel for="obs"
+                                   value="Observaciones:" />
+
+                    <p:inputTextarea id="obs"
+                                     value="#{descuentoFrm.registro.observaciones}"
+                                     rows="3"
+                                     cols="30"
+                                     autoResize="true" />
+
                 </h:panelGrid>
 
-                <br/>
-                <p:commandButton value="Guardar Descuento" 
-                                 actionListener="#{descuentoFrm.btnGuardarHandler()}" 
-                                 update="frmDescuento" 
-                                 icon="pi pi-save" />
+                <p:separator />
 
-                <br/><br/>
+                <p:commandButton
+                    value="Guardar"
+                    action="#{descuentoFrm.btnGuardarHandler}"
+                    update="@form"
+                    icon="pi pi-save" />
 
-                <p:dataTable id="dtDescuentos" value="#{descuentoFrm.listaRegistros}" var="d" emptyMessage="No hay descuentos registrados.">
-                    <p:column headerText="ID">
-                        <h:outputText value="#{d.idDescuento}" />
-                    </p:column>
+                <p:commandButton
+                    value="Nuevo / Limpiar"
+                    action="#{descuentoFrm.limpiar}"
+                    process="@this"
+                    update="@form"
+                    immediate="true"
+                    icon="pi pi-plus"
+                    styleClass="ui-button-secondary" />
+
+            </p:panel>
+
+            <p:panel header="Descuentos Registrados"
+                     style="margin-top: 15px;">
+
+                <p:dataTable id="dtDescuentos"
+                             value="#{descuentoFrm.listaRegistros}"
+                             var="d"
+                             rowKey="#{d.idDescuento}"
+                             emptyMessage="No hay descuentos registrados."
+                             paginator="true"
+                             rows="10">
+
                     <p:column headerText="Nombre">
                         <h:outputText value="#{d.nombre}" />
                     </p:column>
+
                     <p:column headerText="Tipo Descuento">
-                        <h:outputText value="#{d.idTipoDescuento != null ? d.idTipoDescuento.nombre : ''}" />
+                        <h:outputText
+                            value="#{d.idTipoDescuento != null
+                                     ? d.idTipoDescuento.nombre
+                                     : 'Sin tipo'}" />
                     </p:column>
+
                     <p:column headerText="Desde">
                         <h:outputText value="#{d.fechaDesde}">
-                            <f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+                            <f:convertDateTime pattern="dd/MM/yyyy HH:mm"
+                                               timeZone="America/El_Salvador" />
                         </h:outputText>
                     </p:column>
+
                     <p:column headerText="Hasta">
-                        <h:outputText value="#{d.fechaHasta != null ? d.fechaHasta : 'Sin Fecha Fin (Abierto)'}">
-                            <f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+                        <h:outputText
+                            value="#{d.fechaHasta != null
+                                     ? d.fechaHasta
+                                     : 'Sin fecha fin'}">
+                            <f:convertDateTime pattern="dd/MM/yyyy HH:mm"
+                                               timeZone="America/El_Salvador" />
                         </h:outputText>
                     </p:column>
+
                     <p:column headerText="Observaciones">
                         <h:outputText value="#{d.observaciones}" />
                     </p:column>
+
                     <p:column headerText="Acciones">
-                        <p:commandButton icon="pi pi-pencil" 
-                                         actionListener="#{descuentoFrm.seleccionarRegistro(d)}" 
-                                         update=":frmDescuento" 
-                                         process="@this" />
+
+                        <p:commandButton
+                            icon="pi pi-pencil"
+                            title="Editar"
+                            action="#{descuentoFrm.seleccionarRegistro(d)}"
+                            process="@this"
+                            update=":frmDescuento"
+                            styleClass="ui-button-warning" />
+
+                        <p:commandButton
+                            icon="pi pi-trash"
+                            title="Eliminar"
+                            action="#{descuentoFrm.eliminarRegistro(d)}"
+                            process="@this"
+                            update=":frmDescuento"
+                            styleClass="ui-button-danger">
+
+                            <p:confirm
+                                header="Confirmar eliminación"
+                                message="¿Seguro que deseas eliminar este descuento?"
+                                icon="pi pi-exclamation-triangle" />
+                        </p:commandButton>
+
                     </p:column>
+
                 </p:dataTable>
+
             </p:panel>
+
+            <p:confirmDialog global="true"
+                             showEffect="fade"
+                             hideEffect="fade"
+                             responsive="true"
+                             width="350">
+
+                <p:commandButton value="Sí, eliminar"
+                                 type="button"
+                                 styleClass="ui-confirmdialog-yes ui-button-danger"
+                                 icon="pi pi-check" />
+
+                <p:commandButton value="Cancelar"
+                                 type="button"
+                                 styleClass="ui-confirmdialog-no ui-button-secondary"
+                                 icon="pi pi-times" />
+
+            </p:confirmDialog>
+
         </h:form>
+
     </ui:define>
 
 </ui:composition>

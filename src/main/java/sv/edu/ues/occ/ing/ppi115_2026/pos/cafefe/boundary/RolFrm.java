@@ -1,3 +1,4 @@
+
 package sv.edu.ues.occ.ing.ppi115_2026.pos.cafefe.boundary;
 
 import jakarta.annotation.PostConstruct;
@@ -7,6 +8,7 @@ import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import sv.edu.ues.occ.ing.ppi115_2026.pos.cafefe.control.RolDAOInterface;
@@ -31,51 +33,152 @@ public class RolFrm implements Serializable {
     }
 
     public void nuevoRegistro() {
-        this.registroSeleccionado = new Rol();
-        this.registroSeleccionado.setActivo(true);
+        registroSeleccionado = new Rol();
+        registroSeleccionado.setActivo(true);
     }
 
     public void cargarDatos() {
         try {
-            this.listaRol = rolDAO.findRange(0, 100);
+            List<Rol> datos = rolDAO.findRange(0, 1000);
+            listaRol = datos != null ? datos : new ArrayList<>();
         } catch (Exception e) {
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Error al cargar los roles"));
+            mostrarMensaje(
+                    FacesMessage.SEVERITY_ERROR,
+                    "Error",
+                    "No se pudieron cargar los roles."
+            );
         }
+    }
+
+    public void seleccionar(Rol rol) {
+        if (rol == null) {
+            return;
+        }
+
+        // Copiamos los datos para no modificar la fila directamente.
+        registroSeleccionado = new Rol();
+        registroSeleccionado.setIdRol(rol.getIdRol());
+        registroSeleccionado.setNombre(rol.getNombre());
+        registroSeleccionado.setObservaciones(rol.getObservaciones());
+        registroSeleccionado.setActivo(rol.getActivo());
     }
 
     public void guardar() {
         try {
-            if (registroSeleccionado.getNombre() == null || registroSeleccionado.getNombre().trim().isEmpty()) {
-                FacesContext.getCurrentInstance().addMessage(null,
-                        new FacesMessage(FacesMessage.SEVERITY_WARN, "Atención", "El nombre del rol es obligatorio"));
+            if (registroSeleccionado == null) {
+                mostrarMensaje(
+                        FacesMessage.SEVERITY_ERROR,
+                        "Error",
+                        "No hay un rol seleccionado."
+                );
                 return;
             }
+
+            String nombre = registroSeleccionado.getNombre();
+
+            if (nombre == null || nombre.trim().isEmpty()) {
+                mostrarMensaje(
+                        FacesMessage.SEVERITY_WARN,
+                        "Validación",
+                        "El nombre del rol es obligatorio."
+                );
+                return;
+            }
+
+            registroSeleccionado.setNombre(nombre.trim());
 
             if (registroSeleccionado.getIdRol() == null) {
                 registroSeleccionado.setIdRol(UUID.randomUUID());
                 rolDAO.create(registroSeleccionado);
-                FacesContext.getCurrentInstance().addMessage(null,
-                        new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Rol registrado correctamente"));
+
+                mostrarMensaje(
+                        FacesMessage.SEVERITY_INFO,
+                        "Éxito",
+                        "Rol registrado correctamente."
+                );
             } else {
                 rolDAO.edit(registroSeleccionado);
-                FacesContext.getCurrentInstance().addMessage(null,
-                        new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Rol actualizado correctamente"));
+
+                mostrarMensaje(
+                        FacesMessage.SEVERITY_INFO,
+                        "Éxito",
+                        "Rol actualizado correctamente."
+                );
             }
+
             nuevoRegistro();
             cargarDatos();
+
         } catch (Exception e) {
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Error al guardar el rol"));
+            mostrarMensaje(
+                    FacesMessage.SEVERITY_ERROR,
+                    "Error",
+                    "No se pudo guardar el rol. Verifica los datos."
+            );
         }
     }
 
-    public void seleccionar(Rol r) {
-        this.registroSeleccionado = r;
+    public void eliminar(Rol rol) {
+        if (rol == null || rol.getIdRol() == null) {
+            mostrarMensaje(
+                    FacesMessage.SEVERITY_WARN,
+                    "Aviso",
+                    "No se seleccionó un rol válido."
+            );
+            return;
+        }
+
+        try {
+            // Eliminación lógica: no borramos el registro físicamente.
+            rol.setActivo(false);
+            rolDAO.edit(rol);
+
+            if (registroSeleccionado != null
+                    && rol.getIdRol().equals(registroSeleccionado.getIdRol())) {
+                nuevoRegistro();
+            }
+
+            cargarDatos();
+
+            mostrarMensaje(
+                    FacesMessage.SEVERITY_INFO,
+                    "Éxito",
+                    "Rol desactivado correctamente."
+            );
+
+        } catch (Exception e) {
+            mostrarMensaje(
+                    FacesMessage.SEVERITY_ERROR,
+                    "Error",
+                    "No se pudo desactivar el rol."
+            );
+        }
     }
 
-    // Getters y Setters
-    public List<Rol> getListaRol() { return listaRol; }
-    public Rol getRegistroSeleccionado() { return registroSeleccionado; }
-    public void setRegistroSeleccionado(Rol registroSeleccionado) { this.registroSeleccionado = registroSeleccionado; }
+    private void mostrarMensaje(
+            FacesMessage.Severity severidad,
+            String titulo,
+            String detalle) {
+
+        FacesContext.getCurrentInstance().addMessage(
+                null,
+                new FacesMessage(severidad, titulo, detalle)
+        );
+    }
+
+    public List<Rol> getListaRol() {
+        return listaRol;
+    }
+
+    public void setListaRol(List<Rol> listaRol) {
+        this.listaRol = listaRol;
+    }
+
+    public Rol getRegistroSeleccionado() {
+        return registroSeleccionado;
+    }
+
+    public void setRegistroSeleccionado(Rol registroSeleccionado) {
+        this.registroSeleccionado = registroSeleccionado;
+    }
 }

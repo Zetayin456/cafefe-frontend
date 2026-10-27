@@ -1,4 +1,5 @@
-<?xml version='1.0' encoding='UTF-8' ?>
+
+<?xml version="1.0" encoding="UTF-8" ?>
 <ui:composition xmlns="http://www.w3.org/1999/xhtml"
                 xmlns:ui="jakarta.faces.facelets"
                 xmlns:h="jakarta.faces.html"
@@ -7,100 +8,185 @@
                 template="/WEB-INF/plantillas/general.xhtml">
 
     <ui:define name="titulo">Gestión de Empleados</ui:define>
-    <ui:define name="header_titulo">Administración de Personal</ui:define>
+
+    <ui:define name="header_titulo">
+        Administración de Personal
+    </ui:define>
 
     <ui:define name="contenido">
+
+        <p:messages id="messages"
+                    showDetail="true"
+                    closable="true" />
+
         <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-            
-            <!-- FORMULARIO DE REGISTRO -->
+
             <div style="flex: 1; min-width: 320px;">
-                <p:card style="box-shadow: 0 4px 8px rgba(0,0,0,0.05); border-top: 4px solid #06b6d4;">
+                <p:card>
                     <f:facet name="title">
-                        <i class="pi pi-id-card" style="color: #06b6d4; margin-right: 8px;"></i>
-                        #{empleadoFrm.registroSeleccionado.idEmpleado == null ? 'Nuevo Empleado' : 'Editar Empleado'}
+                        <i class="pi pi-id-card"
+                           style="margin-right: 8px;"></i>
+                        #{empleadoFrm.registroSeleccionado.idEmpleado == null
+                            ? 'Nuevo Empleado' : 'Editar Empleado'}
                     </f:facet>
 
                     <h:form id="frmNuevo">
-                        <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 10px;">
-                            
+
+                        <p:messages id="formMessages"
+                                    showDetail="true"
+                                    closable="true" />
+
+                        <div style="display: flex; flex-direction: column; gap: 15px;">
+
                             <div>
-                                <p:outputLabel value="Nombre:" for="txtNombre" style="font-weight: 600; display: block; margin-bottom: 6px;"/>
-                                <p:inputText id="txtNombre" value="#{empleadoFrm.registroSeleccionado.nombre}" required="true" placeholder="Ej. Juan Carlos" style="width: 100%;"/>
+                                <p:outputLabel value="Nombre:"
+                                               for="txtNombre" />
+
+                                <p:inputText id="txtNombre"
+                                             value="#{empleadoFrm.registroSeleccionado.nombre}"
+                                             required="true"
+                                             requiredMessage="El nombre es obligatorio."
+                                             maxlength="255"
+                                             placeholder="Ej. Juan Carlos"
+                                             style="width: 100%;" />
                             </div>
 
                             <div>
-                                <p:outputLabel value="Apellido:" for="txtApellido" style="font-weight: 600; display: block; margin-bottom: 6px;"/>
-                                <p:inputText id="txtApellido" value="#{empleadoFrm.registroSeleccionado.apellido}" required="true" placeholder="Ej. Pérez Gómez" style="width: 100%;"/>
+                                <p:outputLabel value="Apellido:"
+                                               for="txtApellido" />
+
+                                <p:inputText id="txtApellido"
+                                             value="#{empleadoFrm.registroSeleccionado.apellido}"
+                                             required="true"
+                                             requiredMessage="El apellido es obligatorio."
+                                             maxlength="255"
+                                             placeholder="Ej. Pérez Gómez"
+                                             style="width: 100%;" />
                             </div>
 
                             <div style="display: flex; align-items: center; gap: 10px;">
-                                <p:selectBooleanCheckbox id="chkActivo" value="#{empleadoFrm.registroSeleccionado.activo}" />
-                                <p:outputLabel value="Empleado Activo" for="chkActivo" style="font-weight: 600;"/>
+                                <p:selectBooleanCheckbox id="chkActivo"
+                                                         value="#{empleadoFrm.registroSeleccionado.activo}" />
+
+                                <p:outputLabel value="Empleado activo"
+                                               for="chkActivo" />
                             </div>
 
                             <div>
-                                <p:outputLabel value="Comentarios:" for="txtComentarios" style="font-weight: 600; display: block; margin-bottom: 6px;"/>
-                                <p:inputTextarea id="txtComentarios" value="#{empleadoFrm.registroSeleccionado.comentarios}" rows="3" style="width: 100%;"/>
+                                <p:outputLabel value="Comentarios:"
+                                               for="txtComentarios" />
+
+                                <p:inputTextarea id="txtComentarios"
+                                                 value="#{empleadoFrm.registroSeleccionado.comentarios}"
+                                                 rows="3"
+                                                 maxlength="2000"
+                                                 style="width: 100%;" />
                             </div>
 
-                            <div style="display: flex; gap: 10px; margin-top: 15px;">
-                                <p:commandButton value="Guardar" 
-                                                 actionListener="#{empleadoFrm.guardar()}" 
-                                                 update=":frmTabla:tblEmpleado :frmNuevo :messages" 
-                                                 icon="pi pi-save" 
-                                                 styleClass="ui-button-info" style="flex: 1;" />
-                                
-                                <p:commandButton value="Limpiar" 
-                                                 actionListener="#{empleadoFrm.nuevoRegistro()}" 
-                                                 update=":frmNuevo" 
-                                                 icon="pi pi-refresh" 
+                            <div style="display: flex; gap: 10px; margin-top: 10px;">
+
+                                <p:commandButton value="Guardar"
+                                                 actionListener="#{empleadoFrm.guardar()}"
+                                                 process="@form"
+                                                 update=":frmTabla:tblEmpleado :messages formMessages"
+                                                 icon="pi pi-save"
+                                                 styleClass="ui-button-info"
+                                                 style="flex: 1;" />
+
+                                <p:commandButton value="Limpiar"
+                                                 actionListener="#{empleadoFrm.nuevoRegistro()}"
+                                                 process="@this"
+                                                 update="@form"
+                                                 icon="pi pi-refresh"
                                                  styleClass="ui-button-outlined ui-button-secondary" />
+
                             </div>
                         </div>
                     </h:form>
                 </p:card>
             </div>
 
-            <!-- TABLA DE EMPLEADOS -->
             <div style="flex: 2; min-width: 450px;">
-                <p:card style="box-shadow: 0 4px 8px rgba(0,0,0,0.05);">
+                <p:card>
                     <f:facet name="title">
-                        <i class="pi pi-users" style="color: #64748b; margin-right: 8px;"></i>Personal Registrado
+                        <i class="pi pi-users"
+                           style="margin-right: 8px;"></i>
+                        Personal Registrado
                     </f:facet>
 
                     <h:form id="frmTabla">
-                        <p:dataTable id="tblEmpleado" 
-                                     var="e" 
-                                     value="#{empleadoFrm.listaEmpleado}" 
-                                     paginator="true" 
+
+                        <p:dataTable id="tblEmpleado"
+                                     var="e"
+                                     value="#{empleadoFrm.listaEmpleado}"
+                                     paginator="true"
                                      rows="6"
                                      paginatorPosition="bottom"
-                                     size="small">
+                                     emptyMessage="No hay empleados registrados.">
 
                             <p:column headerText="Nombre Completo">
-                                <h:outputText value="#{e.nombre} #{e.apellido}" style="font-weight: bold; color: #1e293b;"/>
+                                <h:outputText value="#{e.nombre} #{e.apellido}"
+                                              style="font-weight: bold;" />
                             </p:column>
 
-                            <p:column headerText="Estado" style="width: 100px; text-align: center;">
-                                <p:tag value="#{e.activo ? 'ACTIVO' : 'INACTIVO'}" severity="#{e.activo ? 'success' : 'danger'}" />
+                            <p:column headerText="Estado"
+                                      style="width: 100px; text-align: center;">
+                                <p:tag value="#{e.activo ? 'ACTIVO' : 'INACTIVO'}"
+                                       severity="#{e.activo ? 'success' : 'danger'}" />
                             </p:column>
 
                             <p:column headerText="Comentarios">
                                 <h:outputText value="#{e.comentarios}" />
                             </p:column>
 
-                            <p:column headerText="Acción" style="width: 80px; text-align: center;">
-                                <p:commandButton icon="pi pi-pencil" 
-                                                 actionListener="#{empleadoFrm.seleccionar(e)}" 
-                                                 update=":frmNuevo" 
-                                                 styleClass="ui-button-warning ui-button-flat" />
+                            <p:column headerText="Acciones"
+                                      style="width: 110px; text-align: center;">
+
+                                <p:commandButton icon="pi pi-pencil"
+                                                 title="Editar"
+                                                 actionListener="#{empleadoFrm.seleccionar(e)}"
+                                                 process="@this"
+                                                 update=":frmNuevo"
+                                                 styleClass="ui-button-warning"
+                                                 style="margin-right: 5px;" />
+
+                                <p:commandButton icon="pi pi-trash"
+                                                 title="Desactivar"
+                                                 actionListener="#{empleadoFrm.eliminar(e)}"
+                                                 process="@this"
+                                                 update="tblEmpleado :messages"
+                                                 disabled="#{not e.activo}"
+                                                 styleClass="ui-button-danger">
+
+                                    <p:confirm header="Confirmar desactivación"
+                                               message="¿Deseas desactivar este empleado?"
+                                               icon="pi pi-exclamation-triangle" />
+                                </p:commandButton>
+
                             </p:column>
+
                         </p:dataTable>
+
+                        <p:confirmDialog global="true"
+                                         showEffect="fade"
+                                         hideEffect="fade">
+                            <p:commandButton value="Sí"
+                                             type="button"
+                                             styleClass="ui-confirmdialog-yes"
+                                             icon="pi pi-check" />
+
+                            <p:commandButton value="No"
+                                             type="button"
+                                             styleClass="ui-confirmdialog-no"
+                                             icon="pi pi-times" />
+                        </p:confirmDialog>
+
                     </h:form>
                 </p:card>
             </div>
 
         </div>
+
     </ui:define>
 
 </ui:composition>

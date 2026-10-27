@@ -1,4 +1,5 @@
-<?xml version='1.0' encoding='UTF-8' ?>
+
+<?xml version="1.0" encoding="UTF-8" ?>
 <ui:composition xmlns="http://www.w3.org/1999/xhtml"
                 xmlns:ui="jakarta.faces.facelets"
                 xmlns:h="jakarta.faces.html"
@@ -7,95 +8,174 @@
                 template="/WEB-INF/plantillas/general.xhtml">
 
     <ui:define name="titulo">Gestión de Roles</ui:define>
-    <ui:define name="header_titulo">Administración de Roles</ui:define>
+
+    <ui:define name="header_titulo">
+        Administración de Roles
+    </ui:define>
 
     <ui:define name="contenido">
+
+        <p:messages id="messages"
+                    showDetail="true"
+                    closable="true" />
+
         <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-            
-            <!-- FORMULARIO DE REGISTRO -->
+
             <div style="flex: 1; min-width: 320px;">
-                <p:card style="box-shadow: 0 4px 8px rgba(0,0,0,0.05); border-top: 4px solid #3b82f6;">
+                <p:card>
                     <f:facet name="title">
-                        <i class="pi pi-shield" style="color: #3b82f6; margin-right: 8px;"></i>
-                        #{rolFrm.registroSeleccionado.idRol == null ? 'Nuevo Rol' : 'Editar Rol'}
+                        <i class="pi pi-shield"
+                           style="margin-right: 8px;"></i>
+                        #{rolFrm.registroSeleccionado.idRol == null
+                            ? 'Nuevo Rol' : 'Editar Rol'}
                     </f:facet>
 
                     <h:form id="frmNuevo">
-                        <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 10px;">
-                            
+
+                        <p:messages id="formMessages"
+                                    showDetail="true"
+                                    closable="true" />
+
+                        <div style="display: flex; flex-direction: column; gap: 15px;">
+
                             <div>
-                                <p:outputLabel value="Nombre:" for="txtNombre" style="font-weight: 600; display: block; margin-bottom: 6px;"/>
-                                <p:inputText id="txtNombre" value="#{rolFrm.registroSeleccionado.nombre}" required="true" placeholder="Ej. Administrador, Cajero" style="width: 100%;"/>
+                                <p:outputLabel value="Nombre:"
+                                               for="txtNombre"
+                                               style="font-weight: 600; display: block; margin-bottom: 6px;" />
+
+                                <p:inputText id="txtNombre"
+                                             value="#{rolFrm.registroSeleccionado.nombre}"
+                                             required="true"
+                                             requiredMessage="El nombre del rol es obligatorio."
+                                             maxlength="155"
+                                             placeholder="Ej. Administrador, Cajero"
+                                             style="width: 100%;" />
                             </div>
 
                             <div style="display: flex; align-items: center; gap: 10px;">
-                                <p:selectBooleanCheckbox id="chkActivo" value="#{rolFrm.registroSeleccionado.activo}" />
-                                <p:outputLabel value="Activo" for="chkActivo" style="font-weight: 600;"/>
+                                <p:selectBooleanCheckbox id="chkActivo"
+                                                         value="#{rolFrm.registroSeleccionado.activo}" />
+
+                                <p:outputLabel value="Activo"
+                                               for="chkActivo" />
                             </div>
 
                             <div>
-                                <p:outputLabel value="Observaciones:" for="txtObs" style="font-weight: 600; display: block; margin-bottom: 6px;"/>
-                                <p:inputTextarea id="txtObs" value="#{rolFrm.registroSeleccionado.observaciones}" rows="3" style="width: 100%;"/>
+                                <p:outputLabel value="Observaciones:"
+                                               for="txtObs"
+                                               style="font-weight: 600; display: block; margin-bottom: 6px;" />
+
+                                <p:inputTextarea id="txtObs"
+                                                 value="#{rolFrm.registroSeleccionado.observaciones}"
+                                                 rows="3"
+                                                 maxlength="2000"
+                                                 style="width: 100%;" />
                             </div>
 
-                            <div style="display: flex; gap: 10px; margin-top: 15px;">
-                                <p:commandButton value="Guardar" 
-                                                 actionListener="#{rolFrm.guardar()}" 
-                                                 update=":frmTabla:tblRol :frmNuevo :messages" 
-                                                 icon="pi pi-save" 
-                                                 styleClass="ui-button-primary" style="flex: 1;" />
-                                
-                                <p:commandButton value="Limpiar" 
-                                                 actionListener="#{rolFrm.nuevoRegistro()}" 
-                                                 update=":frmNuevo" 
-                                                 icon="pi pi-refresh" 
+                            <div style="display: flex; gap: 10px; margin-top: 10px;">
+
+                                <p:commandButton value="Guardar"
+                                                 actionListener="#{rolFrm.guardar()}"
+                                                 process="@form"
+                                                 update=":frmTabla:tblRol :messages formMessages"
+                                                 icon="pi pi-save"
+                                                 styleClass="ui-button-primary"
+                                                 style="flex: 1;" />
+
+                                <p:commandButton value="Limpiar"
+                                                 actionListener="#{rolFrm.nuevoRegistro()}"
+                                                 process="@this"
+                                                 update="@form"
+                                                 icon="pi pi-refresh"
                                                  styleClass="ui-button-outlined ui-button-secondary" />
+
                             </div>
                         </div>
                     </h:form>
                 </p:card>
             </div>
 
-            <!-- TABLA RESUMEN -->
             <div style="flex: 2; min-width: 450px;">
-                <p:card style="box-shadow: 0 4px 8px rgba(0,0,0,0.05);">
+                <p:card>
                     <f:facet name="title">
-                        <i class="pi pi-list" style="color: #64748b; margin-right: 8px;"></i>Roles Registrados
+                        <i class="pi pi-list"
+                           style="margin-right: 8px;"></i>
+                        Roles Registrados
                     </f:facet>
 
                     <h:form id="frmTabla">
-                        <p:dataTable id="tblRol" 
-                                     var="r" 
-                                     value="#{rolFrm.listaRol}" 
-                                     paginator="true" 
+
+                        <p:dataTable id="tblRol"
+                                     var="r"
+                                     value="#{rolFrm.listaRol}"
+                                     paginator="true"
                                      rows="6"
                                      paginatorPosition="bottom"
-                                     size="small">
+                                     emptyMessage="No hay roles registrados.">
 
                             <p:column headerText="Nombre">
-                                <h:outputText value="#{r.nombre}" style="font-weight: bold;"/>
+                                <h:outputText value="#{r.nombre}"
+                                              style="font-weight: bold;" />
                             </p:column>
 
-                            <p:column headerText="Estado" style="width: 100px; text-align: center;">
-                                <p:tag value="#{r.activo ? 'ACTIVO' : 'INACTIVO'}" severity="#{r.activo ? 'success' : 'danger'}" />
+                            <p:column headerText="Estado"
+                                      style="width: 100px; text-align: center;">
+                                <p:tag value="#{r.activo ? 'ACTIVO' : 'INACTIVO'}"
+                                       severity="#{r.activo ? 'success' : 'danger'}" />
                             </p:column>
 
                             <p:column headerText="Observaciones">
                                 <h:outputText value="#{r.observaciones}" />
                             </p:column>
 
-                            <p:column headerText="Acción" style="width: 80px; text-align: center;">
-                                <p:commandButton icon="pi pi-pencil" 
-                                                 actionListener="#{rolFrm.seleccionar(r)}" 
-                                                 update=":frmNuevo" 
-                                                 styleClass="ui-button-warning ui-button-flat" />
+                            <p:column headerText="Acciones"
+                                      style="width: 110px; text-align: center;">
+
+                                <p:commandButton icon="pi pi-pencil"
+                                                 title="Editar"
+                                                 actionListener="#{rolFrm.seleccionar(r)}"
+                                                 process="@this"
+                                                 update=":frmNuevo"
+                                                 styleClass="ui-button-warning"
+                                                 style="margin-right: 5px;" />
+
+                                <p:commandButton icon="pi pi-trash"
+                                                 title="Desactivar"
+                                                 actionListener="#{rolFrm.eliminar(r)}"
+                                                 process="@this"
+                                                 update="tblRol :messages"
+                                                 disabled="#{not r.activo}"
+                                                 styleClass="ui-button-danger">
+
+                                    <p:confirm header="Confirmar desactivación"
+                                               message="¿Deseas desactivar este rol?"
+                                               icon="pi pi-exclamation-triangle" />
+                                </p:commandButton>
+
                             </p:column>
+
                         </p:dataTable>
+
+                        <p:confirmDialog global="true"
+                                         showEffect="fade"
+                                         hideEffect="fade">
+                            <p:commandButton value="Sí"
+                                             type="button"
+                                             styleClass="ui-confirmdialog-yes"
+                                             icon="pi pi-check" />
+
+                            <p:commandButton value="No"
+                                             type="button"
+                                             styleClass="ui-confirmdialog-no"
+                                             icon="pi pi-times" />
+                        </p:confirmDialog>
+
                     </h:form>
                 </p:card>
             </div>
 
         </div>
+
     </ui:define>
 
 </ui:composition>

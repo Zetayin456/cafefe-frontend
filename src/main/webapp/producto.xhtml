@@ -1,3 +1,4 @@
+
 <?xml version="1.0" encoding="UTF-8"?>
 <ui:composition xmlns="http://www.w3.org/1999/xhtml"
                 xmlns:h="jakarta.faces.html"
@@ -8,45 +9,169 @@
 
     <ui:define name="titulo">Gestión de Productos</ui:define>
 
+    <ui:define name="header_titulo">
+        Administración de Productos
+    </ui:define>
+
     <ui:define name="contenido">
+
         <h:form id="frmProducto">
-            <p:messages id="messages" showDetail="true" closable="true" />
 
-            <p:panel header="Formulario de Creación de Producto">
-                <h:panelGrid columns="2" columnClasses="ui-grid-col-3,ui-grid-col-9" styleClass="ui-panelgrid-blank" style="width: 100%; margin-bottom: 15px;">
-                    <p:outputLabel for="nombre" value="Nombre del Producto:" style="font-weight: bold;" />
-                    <p:inputText id="nombre" value="#{productoFrm.registroSeleccionado.nombre}" required="true" style="width: 100%;" />
+            <p:messages id="messages"
+                        showDetail="true"
+                        closable="true">
+                <p:autoUpdate />
+            </p:messages>
 
-                    <p:outputLabel for="precioSugerido" value="Precio Sugerido:" style="font-weight: bold;" />
-                    <p:inputNumber id="precioSugerido" 
-                                   value="#{productoFrm.registroSeleccionado.precioSugerido}" 
-                                   symbol="$ " decimalPlaces="2" minValue="0" required="true" style="width: 100%;" />
+            <p:panel header="Formulario de Producto">
 
-                    <p:outputLabel for="activo" value="Activo:" style="font-weight: bold;" />
-                    <p:selectBooleanCheckbox id="activo" value="#{productoFrm.registroSeleccionado.activo}" />
+                <h:panelGrid columns="2"
+                             cellpadding="7"
+                             style="width: 100%;">
+
+                    <p:outputLabel for="nombre"
+                                   value="Nombre del producto: *" />
+
+                    <p:inputText id="nombre"
+                                 value="#{productoFrm.registroSeleccionado.nombre}"
+                                 required="true"
+                                 maxlength="155"
+                                 requiredMessage="Escribe el nombre del producto."
+                                 style="width: 100%;" />
+
+                    <p:outputLabel for="precioSugerido"
+                                   value="Precio sugerido: *" />
+
+                    <p:inputNumber id="precioSugerido"
+                                   value="#{productoFrm.registroSeleccionado.precioSugerido}"
+                                   symbol="$ "
+                                   decimalPlaces="2"
+                                   minValue="0.01"
+                                   required="true"
+                                   requiredMessage="Escribe el precio del producto."
+                                   style="width: 100%;" />
+
+                    <p:outputLabel for="activo" value="Activo:" />
+
+                    <p:selectBooleanCheckbox id="activo"
+                                             value="#{productoFrm.registroSeleccionado.activo}" />
+
+                    <p:outputLabel for="comentarios"
+                                   value="Comentarios:" />
+
+                    <p:inputTextarea id="comentarios"
+                                     value="#{productoFrm.registroSeleccionado.comentarios}"
+                                     rows="3"
+                                     autoResize="true"
+                                     style="width: 100%;" />
+
                 </h:panelGrid>
 
-                <f:facet name="footer">
-                    <p:commandButton value="Guardar Producto" actionListener="#{productoFrm.guardar()}" 
-                                     update="frmProducto" icon="pi pi-save" styleClass="ui-button-primary" />
-                </f:facet>
+                <p:separator />
+
+                <p:commandButton
+                    value="Guardar producto"
+                    action="#{productoFrm.guardar}"
+                    process="@form"
+                    update="@form"
+                    icon="pi pi-save" />
+
+                <p:commandButton
+                    value="Nuevo / Limpiar"
+                    action="#{productoFrm.nuevoRegistro}"
+                    process="@this"
+                    update="@form"
+                    immediate="true"
+                    icon="pi pi-plus"
+                    styleClass="ui-button-secondary" />
+
             </p:panel>
 
             <p:spacer height="20" />
 
-            <p:dataTable value="#{productoFrm.listaProductos}" var="p" id="tblProducto" paginator="true" rows="10" emptyMessage="No se encontraron registros de productos.">
-                <p:column headerText="Nombre">
-                    <h:outputText value="#{p.nombre}" />
-                </p:column>
-                <p:column headerText="Precio Sugerido">
-                    <h:outputText value="#{p.precioSugerido}">
-                        <f:convertNumber type="currency" currencySymbol="$" />
-                    </h:outputText>
-                </p:column>
-                <p:column headerText="Estado">
-                    <h:outputText value="#{p.activo ? 'Activo' : 'Inactivo'}" />
-                </p:column>
-            </p:dataTable>
+            <p:panel header="Productos registrados">
+
+                <p:dataTable id="tblProducto"
+                             value="#{productoFrm.listaProductos}"
+                             var="p"
+                             rowKey="#{p.idProducto}"
+                             paginator="true"
+                             rows="10"
+                             emptyMessage="No se encontraron productos.">
+
+                    <p:column headerText="Nombre">
+                        <h:outputText value="#{p.nombre}" />
+                    </p:column>
+
+                    <p:column headerText="Precio">
+                        <h:outputText value="#{p.precioSugerido}">
+                            <f:convertNumber type="currency"
+                                             currencySymbol="$"
+                                             locale="en-US" />
+                        </h:outputText>
+                    </p:column>
+
+                    <p:column headerText="Estado">
+                        <p:tag value="#{p.activo eq true ? 'Activo' : 'Inactivo'}"
+                               severity="#{p.activo eq true ? 'success' : 'danger'}" />
+                    </p:column>
+
+                    <p:column headerText="Comentarios">
+                        <h:outputText value="#{p.comentarios}" />
+                    </p:column>
+
+                    <p:column headerText="Acciones">
+
+                        <p:commandButton
+                            icon="pi pi-pencil"
+                            title="Editar"
+                            action="#{productoFrm.seleccionar(p)}"
+                            process="@this"
+                            update=":frmProducto"
+                            styleClass="ui-button-warning" />
+
+                        <p:commandButton
+                            icon="pi pi-trash"
+                            title="Desactivar"
+                            action="#{productoFrm.eliminarLogicamente(p)}"
+                            process="@this"
+                            update=":frmProducto"
+                            disabled="#{p.activo ne true}"
+                            styleClass="ui-button-danger">
+
+                            <p:confirm
+                                header="Confirmar desactivación"
+                                message="¿Deseas desactivar este producto?"
+                                icon="pi pi-exclamation-triangle" />
+
+                        </p:commandButton>
+
+                    </p:column>
+
+                </p:dataTable>
+
+            </p:panel>
+
+            <p:confirmDialog global="true"
+                             showEffect="fade"
+                             hideEffect="fade"
+                             responsive="true"
+                             width="350">
+
+                <p:commandButton value="Sí, desactivar"
+                                 type="button"
+                                 styleClass="ui-confirmdialog-yes ui-button-danger"
+                                 icon="pi pi-check" />
+
+                <p:commandButton value="Cancelar"
+                                 type="button"
+                                 styleClass="ui-confirmdialog-no ui-button-secondary"
+                                 icon="pi pi-times" />
+
+            </p:confirmDialog>
+
         </h:form>
+
     </ui:define>
+
 </ui:composition>
