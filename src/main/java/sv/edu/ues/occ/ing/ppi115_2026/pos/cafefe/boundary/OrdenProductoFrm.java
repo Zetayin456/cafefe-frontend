@@ -13,7 +13,7 @@ import java.util.UUID;
 import org.primefaces.model.FilterMeta;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortMeta;
-import sv.edu.ues.occ.ing.ppi115_2026.pos.cafefe.control.OrdenProductoDAO;
+import sv.edu.ues.occ.ing.ppi115_2026.pos.cafefe.control.OrdenProductoDAOInterface;
 import sv.edu.ues.occ.ing.ppi115_2026.pos.cafefe.entity.OrdenProducto;
 
 @Named("ordenProductoFrm")
@@ -21,10 +21,13 @@ import sv.edu.ues.occ.ing.ppi115_2026.pos.cafefe.entity.OrdenProducto;
 public class OrdenProductoFrm implements Serializable {
 
     @Inject
-    private OrdenProductoDAO ordenProductoDAO;
+    private OrdenProductoDAOInterface ordenProductoDAO;
 
     private OrdenProducto registroSeleccionado;
     private LazyDataModel<OrdenProducto> modelo;
+
+    private boolean editando;
+
 
     @PostConstruct
     public void init() {
@@ -64,37 +67,74 @@ public class OrdenProductoFrm implements Serializable {
         };
     }
 
-    public void nuevoRegistro() {
-        this.registroSeleccionado = new OrdenProducto();
-        this.registroSeleccionado.setIdOrdenProducto(UUID.randomUUID());
-    }
+ public void nuevoRegistro() {
+    this.registroSeleccionado = new OrdenProducto();
+    this.registroSeleccionado.setIdOrdenProducto(UUID.randomUUID());
+    this.editando = false;
+}
 
-    public void btnGuardarHandler() {
-        try {
+ public void seleccionarRegistro(OrdenProducto ordenProducto) {
+    if (ordenProducto != null) {
+        this.registroSeleccionado = ordenProducto;
+        this.editando = true;
+    }
+}
+
+
+ public void btnGuardarHandler() {
+    try {
+        if (registroSeleccionado.getPrecio() == null
+                || registroSeleccionado.getPrecio().signum() < 0) {
+            mostrarMensaje(
+                    FacesMessage.SEVERITY_WARN,
+                    "Validación",
+                    "El precio debe ser mayor o igual a cero."
+            );
+            return;
+        }
+
+        if (editando) {
+            ordenProductoDAO.modificar(registroSeleccionado);
+            mostrarMensaje(
+                    FacesMessage.SEVERITY_INFO,
+                    "Éxito",
+                    "Orden-Producto modificada correctamente"
+            );
+        } else {
             if (registroSeleccionado.getIdOrdenProducto() == null) {
                 registroSeleccionado.setIdOrdenProducto(UUID.randomUUID());
             }
 
-            boolean existe = false;
-            if (registroSeleccionado.getIdOrdenProducto() != null) {
-                OrdenProducto op = ordenProductoDAO.buscarPorId(registroSeleccionado.getIdOrdenProducto().toString());
-                if (op != null) {
-                    existe = true;
-                }
-            }
-
-            if (!existe) {
-                ordenProductoDAO.crear(registroSeleccionado);
-                mostrarMensaje(FacesMessage.SEVERITY_INFO, "Éxito", "Orden-Producto registrada correctamente");
-            } else {
-                ordenProductoDAO.modificar(registroSeleccionado);
-                mostrarMensaje(FacesMessage.SEVERITY_INFO, "Éxito", "Orden-Producto modificada correctamente");
-            }
-            nuevoRegistro();
-        } catch (Exception e) {
-            mostrarMensaje(FacesMessage.SEVERITY_ERROR, "Error", "No se pudo guardar la información");
+            ordenProductoDAO.crear(registroSeleccionado);
+            mostrarMensaje(
+                    FacesMessage.SEVERITY_INFO,
+                    "Éxito",
+                    "Orden-Producto registrada correctamente"
+            );
         }
+
+        nuevoRegistro();
+
+    } catch (Exception e) {
+        mostrarMensaje(
+                FacesMessage.SEVERITY_ERROR,
+                "Error",
+                "No se pudo guardar la información."
+        );
     }
+}
+
+public boolean isEditando() {
+    return editando;
+}
+
+public void setEditando(boolean editando) {
+    this.editando = editando;
+}
+
+
+
+
 
     public void btnEliminarHandler() {
         try {

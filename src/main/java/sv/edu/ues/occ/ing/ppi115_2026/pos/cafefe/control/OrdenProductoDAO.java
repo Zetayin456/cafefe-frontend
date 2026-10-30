@@ -1,95 +1,89 @@
 package sv.edu.ues.occ.ing.ppi115_2026.pos.cafefe.control;
 
+import java.util.List;
+import java.util.UUID;
 import jakarta.ejb.Stateless;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import java.io.Serializable;
-import java.util.Collections;
-import java.util.List;
-import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import sv.edu.ues.occ.ing.ppi115_2026.pos.cafefe.entity.OrdenProducto;
 
 @Stateless
-public class OrdenProductoDAO implements Serializable {
+public class OrdenProductoDAO extends DefaultDAO<OrdenProducto> implements OrdenProductoDAOInterface {
 
     @PersistenceContext(unitName = "cafefePU")
     private EntityManager em;
 
-    private static final Logger LOG = Logger.getLogger(OrdenProductoDAO.class.getName());
+    public OrdenProductoDAO() { super(OrdenProducto.class); }
 
-    public void crear(OrdenProducto ordenProducto) {
-        try {
-            if (ordenProducto != null) {
-                em.persist(ordenProducto);
-            }
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, "Error al crear OrdenProducto", e);
+    @Override
+    protected EntityManager getEntityManager() { return em; }
+
+    @Override
+    public void crear(OrdenProducto entity) {
+        if (entity != null) {
+            create(entity);
         }
     }
 
-    public void modificar(OrdenProducto ordenProducto) {
-        try {
-            if (ordenProducto != null) {
-                em.merge(ordenProducto);
-            }
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, "Error al modificar OrdenProducto", e);
+    @Override
+    public void modificar(OrdenProducto entity) {
+        if (entity != null) {
+            edit(entity);
         }
     }
 
-    public void eliminar(OrdenProducto ordenProducto) {
-        try {
-            if (ordenProducto != null) {
-                OrdenProducto op = em.merge(ordenProducto);
-                em.remove(op);
-            }
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, "Error al eliminar OrdenProducto", e);
+    @Override
+    public void eliminar(OrdenProducto entity) {
+        if (entity == null || entity.getIdOrdenProducto() == null) {
+            throw new IllegalArgumentException("El registro a eliminar no es válido.");
+        }
+        OrdenProducto gestionado = find(entity.getIdOrdenProducto());
+        if (gestionado != null) {
+            em.remove(gestionado);
         }
     }
 
-    public OrdenProducto buscarPorId(Object id) {
-        try {
-            if (id == null) {
-                return null;
-            }
-            if (id instanceof String strId) {
-                return em.find(OrdenProducto.class, UUID.fromString(strId));
-            }
-            return em.find(OrdenProducto.class, id);
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, "Error al buscar OrdenProducto por ID", e);
+    @Override
+    public OrdenProducto findById(Object id) {
+        if (id == null) {
             return null;
         }
+        UUID parsedId = parseId(id);
+        return parsedId != null ? find(parsedId) : null;
     }
 
+    @Override
+    public OrdenProducto buscarPorId(Object id) {
+        if (id == null) {
+            return null;
+        }
+        UUID parsedId = parseId(id);
+        return parsedId != null ? find(parsedId) : null;
+    }
+
+    private UUID parseId(Object id) {
+        if (id instanceof UUID uuid) return uuid;
+        try { return UUID.fromString(id.toString()); }
+        catch (IllegalArgumentException e) { return null; }
+    }
+
+    @Override
+    public List<OrdenProducto> findAll() {
+        return em.createNamedQuery("OrdenProducto.findAll", OrdenProducto.class).getResultList();
+    }
+
+    @Override
     public List<OrdenProducto> findRange(int first, int pageSize) {
-        try {
-            var cb = em.getCriteriaBuilder();
-            var cq = cb.createQuery(OrdenProducto.class);
-            var root = cq.from(OrdenProducto.class);
-            cq.select(root);
-            var query = em.createQuery(cq);
-            query.setFirstResult(first);
-            query.setMaxResults(pageSize);
-            return query.getResultList();
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, "Error al listar OrdenProducto", e);
-            return Collections.emptyList();
-        }
+        return em.createQuery("SELECT op FROM OrdenProducto op ORDER BY op.idOrdenProducto", OrdenProducto.class)
+                 .setFirstResult(first)
+                 .setMaxResults(pageSize)
+                 .getResultList();
     }
 
+    @Override
     public int count() {
-        try {
-            var cb = em.getCriteriaBuilder();
-            var cq = cb.createQuery(Long.class);
-            cq.select(cb.count(cq.from(OrdenProducto.class)));
-            return em.createQuery(cq).getSingleResult().intValue();
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, "Error al contar OrdenProducto", e);
-            return 0;
-        }
+        return em.createQuery("SELECT COUNT(op) FROM OrdenProducto op", Long.class)
+                 .getSingleResult()
+                 .intValue();
     }
 }

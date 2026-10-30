@@ -19,7 +19,8 @@
                                      value="#{ordenFrm.registroSeleccionado.idEmpleadoRol}"
                                      converter="entityConverter"
                                      required="true"
-                                     requiredMessage="Debe seleccionar un empleado con el rol Camarero">
+                                     requiredMessage="Debe seleccionar un empleado con el rol Camarero"
+                                     disabled="#{ordenFrm.registroSeleccionado.idOrden != null}">
                         <f:selectItem itemLabel="-- Seleccione Camarero --" itemValue="#{null}" noSelectionOption="true" />
                         <f:selectItems value="#{ordenFrm.listaCamareros}"
                                        var="er"
@@ -28,7 +29,7 @@
                     </p:selectOneMenu>
 
                     <p:outputLabel for="fechaCreacion" value="Fecha Orden:" />
-                    <p:datePicker id="fechaCreacion" value="#{ordenFrm.registroSeleccionado.fechaCreacion}" showTime="true" required="true" />
+                    <p:datePicker id="fechaCreacion" value="#{ordenFrm.registroSeleccionado.fechaCreacion}" showTime="true" required="true" disabled="#{ordenFrm.registroSeleccionado.idOrden != null}" />
                 </h:panelGrid>
 
                 <p:separator/>
@@ -37,7 +38,7 @@
                 <p:panel header="Agregar Producto a la Orden" style="margin-bottom: 10px;">
                     <h:panelGrid columns="4" cellpadding="5">
                         <p:outputLabel for="cboProd" value="Producto:" />
-                        <p:selectOneMenu id="cboProd" value="#{ordenFrm.productoSeleccionado}" converter="entityConverter">
+                        <p:selectOneMenu id="cboProd" value="#{ordenFrm.productoSeleccionado}" disabled="#{ordenFrm.registroSeleccionado.idOrden != null}" converter="entityConverter">
                             <f:selectItem itemLabel="-- Seleccione Producto --" itemValue="#{null}" />
                             <f:selectItems value="#{ordenFrm.listaProductos}" var="p" itemLabel="#{p.nombre} ($#{p.precioSugerido})" itemValue="#{p}" />
                         </p:selectOneMenu>
@@ -45,29 +46,25 @@
                         <p:outputLabel for="obsItem" value="Observaciones:" />
                         <p:inputText id="obsItem" value="#{ordenFrm.observacionItem}" />
                     </h:panelGrid>
-                    <p:commandButton value="Agregar Producto" actionListener="#{ordenFrm.agregarProducto()}" 
+                    <p:commandButton value="Agregar Producto" actionListener="#{ordenFrm.agregarProducto()}"
+                                     process="@form"
                                      update="tblDetalle cboProd obsItem messages" icon="pi pi-plus" styleClass="ui-button-info" />
                 </p:panel>
 
-                <!-- Botones de evaluación -->
-                <h:panelGrid columns="3" cellpadding="5">
-                    <p:commandButton value="Aplicar Descuento por Fechas" 
-                                     actionListener="#{ordenFrm.aplicarDescuentosPorFecha()}" 
-                                     update="tblDetalle :frmOrden:messages" styleClass="ui-button-warning" />
-
-                    <p:commandButton value="Aplicar Descuento Abierto" 
-                                     actionListener="#{ordenFrm.aplicarDescuentoAbierto()}" 
-                                     update="tblDetalle :frmOrden:messages" styleClass="ui-button-help" />
-
-                    <p:commandButton value="Guardar Orden" 
-                                     actionListener="#{ordenFrm.btnGuardarHandler()}" 
-                                     update="frmOrden" icon="pi pi-save" styleClass="ui-button-success" />
+                <h:panelGrid columns="1" cellpadding="5">
+                    <p:commandButton value="Guardar Orden"
+                                     actionListener="#{ordenFrm.btnGuardarHandler()}"
+                                     process="@form"
+                                     update=":frmOrden :frmListaOrdenes:tablaOrdenes"
+                                     icon="pi pi-save" styleClass="ui-button-success" />
                 </h:panelGrid>
             </p:panel>
 
             <p:spacer height="15" />
 
             <!-- Tabla de detalle -->
+            <h:outputText value="Elija el descuento para cada producto y pulse Aplicar. Solo se muestran descuentos vigentes para la fecha de la orden."
+                          styleClass="ui-message-info" />
             <p:dataTable value="#{ordenFrm.itemsOrden}" var="item" id="tblDetalle" emptyMessage="No hay productos agregados a esta orden.">
                 <p:column headerText="Producto">
                     <h:outputText value="#{item.idProducto.nombre}" />
@@ -80,12 +77,123 @@
                 <p:column headerText="Comentario / Observaciones">
                     <h:outputText value="#{item.observaciones}" style="font-weight: bold; color: blue;" />
                 </p:column>
+                <p:column headerText="Descuento para este producto">
+                    <p:selectOneMenu value="#{item.idDescuentoProductoSeleccionado}"
+                                     disabled="#{ordenFrm.registroSeleccionado.idOrden != null or empty ordenFrm.getDescuentosDisponibles(item)}">
+                        <f:selectItem itemLabel="Sin descuento" itemValue="#{null}" noSelectionOption="true" />
+                        <f:selectItems value="#{ordenFrm.getDescuentosDisponibles(item)}"
+                                       var="descuento"
+                                       itemLabel="#{ordenFrm.etiquetaDescuento(descuento)}"
+                                       itemValue="#{descuento.idDescuentoProducto}" />
+                    </p:selectOneMenu>
+                    <p:commandButton value="Aplicar"
+                                     icon="pi pi-check"
+                                     actionListener="#{ordenFrm.aplicarDescuentoSeleccionado(item)}"
+                                     process="@form"
+                                     update="tblDetalle messages"
+                                     disabled="#{ordenFrm.registroSeleccionado.idOrden != null or empty ordenFrm.getDescuentosDisponibles(item)}" />
+                    <h:outputText value="No hay descuentos vigentes" styleClass="ui-message-warn"
+                                  rendered="#{empty ordenFrm.getDescuentosDisponibles(item)}" />
+                </p:column>
                 <p:column headerText="Acción">
-                    <p:commandButton icon="pi pi-trash" actionListener="#{ordenFrm.removerProducto(item)}" 
+                    <p:commandButton icon="pi pi-trash" actionListener="#{ordenFrm.removerProducto(item)}"
                                      update="tblDetalle" styleClass="ui-button-danger ui-button-flat" />
                 </p:column>
             </p:dataTable>
         </h:form>
-        
+
+        <h:form id="frmListaOrdenes">
+
+    <p:panel header="Órdenes registradas">
+
+        <p:messages id="mensajesLista"
+                    showDetail="true"
+                    closable="true" />
+
+        <p:dataTable id="tablaOrdenes"
+                     value="#{ordenFrm.registros}"
+                     var="orden"
+                     emptyMessage="No hay órdenes registradas."
+                     paginator="true"
+                     rows="10">
+
+            <p:column headerText="Fecha">
+                <h:outputText value="#{orden.fechaCreacion}">
+                    <f:convertDateTime pattern="dd/MM/yyyy HH:mm" />
+                </h:outputText>
+            </p:column>
+
+            <p:column headerText="Empleado">
+                <h:outputText
+                    value="#{orden.idEmpleadoRol.idEmpleado.nombre} #{orden.idEmpleadoRol.idEmpleado.apellido}" />
+            </p:column>
+
+            <p:column headerText="Productos">
+                <ui:repeat value="#{orden.ordenProductoList}" var="detalle" varStatus="estado">
+                    <h:outputText value="#{detalle.idProducto.nombre}" />
+                    <h:outputText value=" — " />
+                    <h:outputText value="#{detalle.precio}">
+                        <f:convertNumber type="currency" currencySymbol="$" />
+                    </h:outputText>
+                    <br />
+                </ui:repeat>
+            </p:column>
+
+            <p:column headerText="Cantidad">
+                <h:outputText
+                    value="#{orden.ordenProductoList.size()}" />
+            </p:column>
+
+            <p:column headerText="Total">
+                <h:outputText value="#{ordenFrm.totalOrden(orden)}">
+                    <f:convertNumber type="currency" currencySymbol="$" />
+                </h:outputText>
+            </p:column>
+
+            <p:column headerText="Acciones">
+
+                <p:commandButton value="Editar"
+                                 icon="pi pi-pencil"
+                                 actionListener="#{ordenFrm.seleccionarOrden(orden)}"
+                                 update=":frmOrden"
+                                 styleClass="ui-button-warning" />
+
+                <p:commandButton value="Eliminar"
+                                 icon="pi pi-trash"
+                                 actionListener="#{ordenFrm.eliminarOrden(orden)}"
+                                 update="tablaOrdenes :frmOrden"
+                                 styleClass="ui-button-danger">
+
+                    <p:confirm header="Confirmar eliminación"
+                               message="¿Desea eliminar esta orden?"
+                               icon="pi pi-exclamation-triangle" />
+
+                </p:commandButton>
+
+            </p:column>
+
+        </p:dataTable>
+
+    </p:panel>
+
+    <p:confirmDialog global="true"
+                     showEffect="fade"
+                     hideEffect="fade">
+
+        <p:commandButton value="Sí"
+                         type="button"
+                         styleClass="ui-confirmdialog-yes ui-button-danger"
+                         icon="pi pi-check" />
+
+        <p:commandButton value="No"
+                         type="button"
+                         styleClass="ui-confirmdialog-no ui-button-secondary"
+                         icon="pi pi-times" />
+
+    </p:confirmDialog>
+
+</h:form>
+
+
     </ui:define>
 </ui:composition>

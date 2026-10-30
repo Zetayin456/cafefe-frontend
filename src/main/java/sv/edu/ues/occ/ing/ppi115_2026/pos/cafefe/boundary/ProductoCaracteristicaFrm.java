@@ -54,9 +54,9 @@ public class ProductoCaracteristicaFrm implements Serializable {
 
     public void cargarDatos() {
         try {
-            this.listaProductoCaracteristica = productoCaracteristicaDAO.findRange(0, 100);
+            this.listaProductoCaracteristica = productoCaracteristicaDAO.findAllWithRelations();
             this.listaProductos = productoDAO.findRange(0, 100);
-            this.listaCaracteristicas = caracteristicaDAO.findRange(0, 100);
+            this.listaCaracteristicas = caracteristicaDAO.findAllWithRelations();
         } catch (Exception e) {
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Error al cargar la información"));
@@ -69,6 +69,23 @@ public class ProductoCaracteristicaFrm implements Serializable {
                 Producto prod = productoDAO.find(idProductoSeleccionado);
                 Caracteristica car = caracteristicaDAO.find(idCaracteristicaSeleccionada);
 
+                if (prod == null || !Boolean.TRUE.equals(prod.getActivo())) {
+                    mensajeError("Solo se pueden asignar características a productos activos.");
+                    return;
+                }
+                // Reobtener la característica desde la lista con relaciones ya cargadas.
+                if (listaCaracteristicas != null) {
+                    car = listaCaracteristicas.stream()
+                            .filter(c -> idCaracteristicaSeleccionada.equals(c.getIdCaracteristica()))
+                            .findFirst().orElse(car);
+                }
+                if (car == null || !Boolean.TRUE.equals(car.getActivo())
+                        || car.getIdTipoCaracteristica() == null
+                        || !Boolean.TRUE.equals(car.getIdTipoCaracteristica().getActivo())) {
+                    mensajeError("No se puede asignar una característica cuyo tipo esté inactivo.");
+                    return;
+                }
+
                 // Validación de Expresión Regular exigida por la rúbrica
                 if (car != null && car.getIdTipoCaracteristica() != null 
                         && car.getIdTipoCaracteristica().getExpresionRegular() != null) {
@@ -76,7 +93,14 @@ public class ProductoCaracteristicaFrm implements Serializable {
                     String regex = car.getIdTipoCaracteristica().getExpresionRegular();
                     String valor = registroSeleccionado.getValor();
 
-                    if (valor == null || !Pattern.matches(regex, valor)) {
+                    boolean coincide;
+                    try {
+                        coincide = valor != null && Pattern.matches(regex, valor);
+                    } catch (java.util.regex.PatternSyntaxException ex) {
+                        mensajeError("La expresión regular configurada para el tipo no es válida.");
+                        return;
+                    }
+                    if (!coincide) {
                         FacesContext.getCurrentInstance().addMessage(null,
                                 new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error de Validación", 
                                         "El valor ingresado no cumple con la Expresión Regular: " + regex));
@@ -107,6 +131,30 @@ public class ProductoCaracteristicaFrm implements Serializable {
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Error al guardar el registro"));
         }
+    }
+
+    public void seleccionar(ProductoCaracteristica asignacion) {
+        this.registroSeleccionado = new ProductoCaracteristica();
+        this.registroSeleccionado.setIdProductoCaracteristica(asignacion.getIdProductoCaracteristica());
+        this.registroSeleccionado.setValor(asignacion.getValor());
+        this.idProductoSeleccionado = asignacion.getIdProducto() != null ? asignacion.getIdProducto().getIdProducto() : null;
+        this.idCaracteristicaSeleccionada = asignacion.getIdCaracteristica() != null ? asignacion.getIdCaracteristica().getIdCaracteristica() : null;
+    }
+
+    public void eliminar(ProductoCaracteristica asignacion) {
+        try {
+            productoCaracteristicaDAO.remove(asignacion);
+            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Asignación eliminada."));
+        } catch (Exception e) {
+            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "No se pudo eliminar la asignación: " + e.getMessage()));
+        }
+        nuevoRegistro();
+        cargarDatos();
+    }
+
+    private void mensajeError(String detalle) {
+        FacesContext.getCurrentInstance().addMessage(null,
+                new FacesMessage(FacesMessage.SEVERITY_ERROR, "Validación", detalle));
     }
 
     // Getters y Setters

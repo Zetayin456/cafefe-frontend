@@ -30,11 +30,21 @@ public class EmpleadoRolDAO extends DefaultDAO<EmpleadoRol> implements EmpleadoR
     public List<EmpleadoRol> findByEmpleado(UUID idEmpleado) {
         if (idEmpleado == null) return Collections.emptyList();
         try {
-            return em.createQuery("SELECT er FROM EmpleadoRol er WHERE er.idEmpleado.idEmpleado = :idEmpleado", EmpleadoRol.class)
+            return em.createQuery("SELECT er FROM EmpleadoRol er "
+                            + "JOIN FETCH er.idEmpleado JOIN FETCH er.idRol "
+                            + "WHERE er.idEmpleado.idEmpleado = :idEmpleado", EmpleadoRol.class)
                      .setParameter("idEmpleado", idEmpleado)
                      .getResultList();
         } catch (Exception e) {
             return Collections.emptyList();
         }
+    }
+
+    @Override
+    public List<EmpleadoRol> findAllWithRelations() {
+        return em.createQuery("SELECT DISTINCT er FROM EmpleadoRol er "
+                + "JOIN FETCH er.idEmpleado JOIN FETCH er.idRol "
+                + "ORDER BY er.idEmpleado.nombre, er.idRol.nombre", EmpleadoRol.class)
+                .getResultList();
     }
 }

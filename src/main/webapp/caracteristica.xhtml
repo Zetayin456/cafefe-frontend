@@ -10,20 +10,51 @@
     <ui:define name="header_titulo">Administración de Características</ui:define>
 
     <ui:define name="contenido">
+        <h:form id="frmNuevo">
+            <p:panel header="Datos de característica" style="margin-top: 1rem;">
+                <h:panelGrid columns="2" cellpadding="5">
+                    <p:outputLabel for="id" value="ID (Autogenerado):" />
+                    <p:inputText id="id" value="#{caracteristicaBean.registro.idCaracteristica}" disabled="true" placeholder="UUID Automático" />
+
+                    <p:outputLabel for="cboTipo" value="Tipo de Característica (Solo Activos):" />
+                    <p:selectOneMenu id="cboTipo"
+                                     value="#{caracteristicaBean.registro.idTipoCaracteristica}"
+                                     converter="tipoCaracteristicaConverter"
+                                     required="true"
+                                     disabled="#{caracteristicaBean.registro.idCaracteristica != null}"
+                                     requiredMessage="Debe seleccionar un Tipo de Característica">
+                        <f:selectItem itemLabel="-- Seleccione un tipo --" itemValue="#{null}" noSelectionOption="true" />
+                        <f:selectItems value="#{caracteristicaBean.tiposCaracteristicaActivos}"
+                                       var="tipo"
+                                       itemLabel="#{tipo.nombre}"
+                                       itemValue="#{tipo}" />
+                    </p:selectOneMenu>
+
+                    <p:outputLabel for="nombre" value="Nombre:" />
+                    <p:inputText id="nombre" value="#{caracteristicaBean.registro.nombre}" required="true" />
+
+                    <p:outputLabel for="activo" value="Activo:" />
+                    <p:selectBooleanCheckbox id="activo" value="#{caracteristicaBean.registro.activo}" />
+
+                    <p:outputLabel for="observaciones" value="Observaciones:" />
+                    <p:inputTextarea id="observaciones" value="#{caracteristicaBean.registro.observaciones}" rows="3" cols="30" />
+                </h:panelGrid>
+
+                <br/>
+                <p:commandButton value="Guardar"
+                                 actionListener="#{caracteristicaBean.guardar()}"
+                                 update=":frmTabla:dtCaracteristica :messages"
+                                 icon="pi pi-check" />
+                <p:commandButton value="Limpiar" actionListener="#{caracteristicaBean.limpiar()}" update="frmNuevo" icon="pi pi-eraser" styleClass="ui-button-secondary" />
+            </p:panel>
+        </h:form>
+
         <h:form id="frmTabla">
             <p:panel header="Gestión de Características">
-                <p:commandButton value="Nueva Característica" 
-                                 actionListener="#{caracteristicaBean.limpiar()}" 
-                                 update=":dialogNuevo" 
-                                 oncomplete="PF('dlgNuevo').show()" 
-                                 icon="pi pi-plus" />
-
-                <br/><br/>
-
-                <p:dataTable id="dtCaracteristica" 
-                             value="#{caracteristicaBean.lista}" 
-                             var="row" 
-                             paginator="true" 
+                <p:dataTable id="dtCaracteristica"
+                             value="#{caracteristicaBean.lista}"
+                             var="row"
+                             paginator="true"
                              rows="10">
 
                     <p:column headerText="ID">
@@ -47,54 +78,21 @@
                     </p:column>
 
                     <p:column headerText="Acciones">
-                        <p:commandButton icon="pi pi-pencil" 
-                                         update=":dialogNuevo" 
-                                         oncomplete="PF('dlgNuevo').show()" 
+                        <p:commandButton icon="pi pi-pencil"
+                                         update=":frmNuevo"
                                          process="@this">
                             <f:setPropertyActionListener value="#{row}" target="#{caracteristicaBean.registro}" />
                         </p:commandButton>
+                        <p:commandButton icon="pi pi-trash" title="Eliminar" action="#{caracteristicaBean.eliminar(row)}" update=":frmTabla:dtCaracteristica :messages">
+                            <p:confirm header="Confirmar eliminación" message="¿Desea eliminar esta característica?" icon="pi pi-exclamation-triangle" />
+                        </p:commandButton>
                     </p:column>
                 </p:dataTable>
+                <p:confirmDialog global="true"><p:commandButton value="Sí" type="button" styleClass="ui-confirmdialog-yes ui-button-danger"/><p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary"/></p:confirmDialog>
             </p:panel>
         </h:form>
 
-        <p:dialog header="Datos de Característica" widgetVar="dlgNuevo" id="dialogNuevo" modal="true" responsive="true">
-            <h:form id="frmNuevo">
-                <h:panelGrid columns="2" cellpadding="5">
-                    <p:outputLabel for="id" value="ID (Autogenerado):" />
-                    <p:inputText id="id" value="#{caracteristicaBean.registro.idCaracteristica}" disabled="true" placeholder="UUID Automático" />
 
-                    <p:outputLabel for="cboTipo" value="Tipo de Característica (Solo Activos):" />
-                    <p:selectOneMenu id="cboTipo"
-                                     value="#{caracteristicaBean.registro.idTipoCaracteristica}"
-                                     converter="tipoCaracteristicaConverter"
-                                     required="true"
-                                     requiredMessage="Debe seleccionar un Tipo de Característica">
-                        <f:selectItem itemLabel="-- Seleccione un tipo --" itemValue="#{null}" noSelectionOption="true" />
-                        <f:selectItems value="#{caracteristicaBean.tiposCaracteristicaActivos}"
-                                       var="tipo"
-                                       itemLabel="#{tipo.nombre}"
-                                       itemValue="#{tipo}" />
-                    </p:selectOneMenu>
-
-                    <p:outputLabel for="nombre" value="Nombre:" />
-                    <p:inputText id="nombre" value="#{caracteristicaBean.registro.nombre}" required="true" />
-
-                    <p:outputLabel for="activo" value="Activo:" />
-                    <p:selectBooleanCheckbox id="activo" value="#{caracteristicaBean.registro.activo}" />
-
-                    <p:outputLabel for="observaciones" value="Observaciones:" />
-                    <p:inputTextarea id="observaciones" value="#{caracteristicaBean.registro.observaciones}" rows="3" cols="30" />
-                </h:panelGrid>
-
-                <br/>
-                <p:commandButton value="Guardar"
-                                 actionListener="#{caracteristicaBean.guardar()}"
-                                 update=":frmTabla:dtCaracteristica :messages"
-                                 oncomplete="if (!args.validationFailed) PF('dlgNuevo').hide()"
-                                 icon="pi pi-check" />
-            </h:form>
-        </p:dialog>
     </ui:define>
 
 </ui:composition>

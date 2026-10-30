@@ -46,11 +46,11 @@ public class FacturaOrdenProductoDAOTest {
         FacturaOrdenProducto entidad = new FacturaOrdenProducto();
         entidad.setIdFacturaOrdenProducto(UUID.randomUUID());
 
-        when(em.merge(entidad)).thenReturn(entidad);
+        when(em.find(FacturaOrdenProducto.class, entidad.getIdFacturaOrdenProducto())).thenReturn(entidad);
 
         facturaOrdenProductoDAO.eliminar(entidad);
 
-        verify(em, times(1)).merge(entidad);
+        verify(em, times(1)).find(FacturaOrdenProducto.class, entidad.getIdFacturaOrdenProducto());
         verify(em, times(1)).remove(entidad);
     }
 }

@@ -13,7 +13,7 @@ import java.util.UUID;
 import org.primefaces.model.FilterMeta;
 import org.primefaces.model.LazyDataModel;
 import org.primefaces.model.SortMeta;
-import sv.edu.ues.occ.ing.ppi115_2026.pos.cafefe.control.FacturaOrdenProductoDAO;
+import sv.edu.ues.occ.ing.ppi115_2026.pos.cafefe.control.FacturaOrdenProductoDAOInterface;
 import sv.edu.ues.occ.ing.ppi115_2026.pos.cafefe.entity.FacturaOrdenProducto;
 
 @Named("facturaOrdenProductoFrm")
@@ -21,7 +21,7 @@ import sv.edu.ues.occ.ing.ppi115_2026.pos.cafefe.entity.FacturaOrdenProducto;
 public class FacturaOrdenProductoFrm implements Serializable {
 
     @Inject
-    private FacturaOrdenProductoDAO facturaOrdenProductoDAO;
+    private FacturaOrdenProductoDAOInterface facturaOrdenProductoDAO;
 
     private FacturaOrdenProducto registroSeleccionado;
     private LazyDataModel<FacturaOrdenProducto> modelo;

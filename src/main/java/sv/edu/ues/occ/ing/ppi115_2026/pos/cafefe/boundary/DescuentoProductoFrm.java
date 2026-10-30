@@ -53,7 +53,7 @@ public class DescuentoProductoFrm implements Serializable {
 
     public void cargarDatos() {
         try {
-            this.listaDescuentoProducto = descuentoProductoDAO.findRange(0, 100);
+            this.listaDescuentoProducto = descuentoProductoDAO.findAllWithRelations();
             this.listaDescuentos = descuentoDAO.findRange(0, 100);
             this.listaProductos = productoDAO.findRange(0, 100);
         } catch (Exception e) {
@@ -117,29 +117,20 @@ public class DescuentoProductoFrm implements Serializable {
                 }
             }
 
-            if (desc.getFechaDesde() != null && registroSeleccionado.getFechaDesde() != null) {
-                if (registroSeleccionado.getFechaDesde().before(desc.getFechaDesde())) {
+            if (desc.getFechaDesde() != null && (registroSeleccionado.getFechaDesde() == null
+                    || registroSeleccionado.getFechaDesde().before(desc.getFechaDesde()))) {
                     FacesContext.getCurrentInstance().addMessage(null,
                             new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error de Validación",
-                                    "La Fecha 'Desde' no puede ser anterior a la fecha de inicio del descuento padre (" + desc.getFechaDesde() + ")."));
+                                    "La fecha 'Desde' debe respetar el inicio de vigencia del descuento (" + desc.getFechaDesde() + ")."));
                     return;
-                }
             }
 
-            if (desc.getFechaHasta() != null && registroSeleccionado.getFechaHasta() == null) {
-                FacesContext.getCurrentInstance().addMessage(null,
-                        new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error de Validación",
-                                "El Descuento padre vence el (" + desc.getFechaHasta() + "). La asignación no puede ser de rango abierto."));
-                return;
-            }
-
-            if (desc.getFechaHasta() != null && registroSeleccionado.getFechaHasta() != null) {
-                if (registroSeleccionado.getFechaHasta().after(desc.getFechaHasta())) {
+            if (desc.getFechaHasta() != null && (registroSeleccionado.getFechaHasta() == null
+                    || registroSeleccionado.getFechaHasta().after(desc.getFechaHasta()))) {
                     FacesContext.getCurrentInstance().addMessage(null,
                             new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error de Validación",
                                     "La Fecha 'Hasta' excede el límite permitido por el descuento seleccionado (" + desc.getFechaHasta() + ")."));
                     return;
-                }
             }
 
             registroSeleccionado.setIdDescuento(desc);
@@ -162,6 +153,16 @@ public class DescuentoProductoFrm implements Serializable {
             FacesContext.getCurrentInstance().addMessage(null,
                     new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Error al guardar los datos"));
         }
+    }
+
+    public void eliminar(DescuentoProducto asignacion) {
+        try {
+            descuentoProductoDAO.remove(asignacion);
+            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Asignación de descuento eliminada."));
+        } catch (Exception e) {
+            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "No se pudo eliminar la asignación: " + e.getMessage()));
+        }
+        cargarDatos();
     }
 
     public List<DescuentoProducto> getListaDescuentoProducto() { return listaDescuentoProducto; }

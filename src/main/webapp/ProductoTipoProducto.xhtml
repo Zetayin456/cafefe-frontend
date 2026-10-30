@@ -1,103 +1,200 @@
-<?xml version='1.0' encoding='UTF-8' ?>
 <ui:composition xmlns="http://www.w3.org/1999/xhtml"
-                xmlns:ui="jakarta.faces.facelets"
-                xmlns:h="jakarta.faces.html"
-                xmlns:p="http://primefaces.org/ui"
-                xmlns:f="jakarta.faces.core"
-                template="/WEB-INF/plantillas/general.xhtml">
+      xmlns:h="jakarta.faces.html"
+      xmlns:ui="jakarta.faces.facelets"
+      xmlns:f="jakarta.faces.core"
+      xmlns:p="http://primefaces.org/ui"
+      template="/WEB-INF/plantillas/general.xhtml">
 
     <ui:define name="titulo">Categorización de Productos</ui:define>
-    <ui:define name="header_titulo">Asignar Tipos a Productos</ui:define>
 
     <ui:define name="contenido">
 
-       
+    <h:form id="formProductoTipoProducto">
 
-        <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-            
-            <!-- PANEL IZQUIERDO: FORMULARIO -->
-            <div style="flex: 1; min-width: 320px; background: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08);">
-                <h3 style="margin-top: 0; color: #2c3e50;"><i class="pi pi-plus-circle" style="margin-right: 8px;"></i>Nueva Asignación</h3>
-                
-                <h:form id="frmNuevo">
-                    <div style="display: flex; flex-direction: column; gap: 15px;">
-                        <div>
-                            <p:outputLabel value="Producto: *" for="cmbProducto" style="font-weight: bold; display: block; margin-bottom: 5px;"/>
-                            <p:selectOneMenu id="cmbProducto" value="#{productoTipoProductoFrm.idProductoSeleccionado}" style="width: 100%;" required="true">
-                                <f:selectItem itemLabel="-- Seleccionar Producto --" itemValue="#{null}" />
-                                <f:selectItems value="#{productoTipoProductoFrm.listaProductos}" var="p" itemLabel="#{p.nombre}" itemValue="#{p.idProducto}" />
-                            </p:selectOneMenu>
-                        </div>
+        <p:messages id="mensajes" showDetail="true" closable="true">
+            <p:autoUpdate />
+        </p:messages>
 
-                        <div>
-                            <p:outputLabel value="Tipo de Producto: *" for="cmbTipo" style="font-weight: bold; display: block; margin-bottom: 5px;"/>
-                            <p:selectOneMenu id="cmbTipo" value="#{productoTipoProductoFrm.idTipoProductoSeleccionado}" style="width: 100%;" required="true">
-                                <f:selectItem itemLabel="-- Seleccionar Tipo --" itemValue="#{null}" />
-                                <f:selectItems value="#{productoTipoProductoFrm.listaTiposProducto}" var="t" itemLabel="#{t.nombre} #{t.activo ? '' : '(Inactivo)'}" itemValue="#{t.idTipoProducto}" />
-                            </p:selectOneMenu>
-                        </div>
+        <p:panel header="Categorización de Productos">
 
-                        <div>
-                            <p:outputLabel value="Observaciones:" for="txtObs" style="font-weight: bold; display: block; margin-bottom: 5px;"/>
-                            <p:inputTextarea id="txtObs" value="#{productoTipoProductoFrm.registroSeleccionado.observaciones}" rows="3" style="width: 100%;"/>
-                        </div>
+            <h3>Nueva asignación / Editar asignación</h3>
 
-                        <div style="display: flex; gap: 10px; margin-top: 10px;">
-                       <p:commandButton value="Guardar" 
-                 actionListener="#{productoTipoProductoFrm.guardar()}" 
-                 process="@form"
-                 update=":frmTabla:tblProductoTipo :frmNuevo" 
-                 icon="pi pi-save" 
-                 styleClass="ui-button-primary" style="flex: 1;" />
-                            
-                            <p:commandButton value="Limpiar" 
-                                             actionListener="#{productoTipoProductoFrm.nuevoRegistro()}" 
-                                             process="@this"
-                                             update=":frmNuevo" 
-                                             icon="pi pi-refresh" 
-                                             styleClass="ui-button-secondary" />
-                        </div>
-                    </div>
-                </h:form>
-            </div>
+            <p:panelGrid columns="2"
+                         layout="grid"
+                         styleClass="ui-fluid"
+                         columnClasses="ui-grid-col-3,ui-grid-col-9">
 
-            <!-- PANEL DERECHO: TABLA -->
-            <div style="flex: 2; min-width: 450px; background: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.08);">
-                <h3 style="margin-top: 0; color: #2c3e50;"><i class="pi pi-list" style="margin-right: 8px;"></i>Asignaciones Actuales</h3>
-                
-                <h:form id="frmTabla">
-                    <p:dataTable id="tblProductoTipo" 
-                                 var="ptp" 
-                                 value="#{productoTipoProductoFrm.listaProductoTipoProducto}" 
-                                 paginator="true" 
-                                 rows="6"
-                                 paginatorPosition="bottom"
-                                 emptyMessage="No se encontraron registros.">
+                <p:outputLabel for="producto"
+                               value="Producto:" />
 
-                        <p:column headerText="Producto">
-                            <h:outputText value="#{ptp.idProducto.nombre}" style="font-weight: bold;"/>
-                        </p:column>
+                <p:selectOneMenu id="producto"
+                                 value="#{productoTipoProductoFrm.idProductoSeleccionado}"
+                                 required="true"
+                                 requiredMessage="Selecciona un producto."
+                                 disabled="#{productoTipoProductoFrm.registroSeleccionado.idProductoTipoProducto != null}">
 
-                        <p:column headerText="Tipo">
-                            <span style="background-color: #e0f2fe; color: #0369a1; padding: 4px 8px; border-radius: 4px; font-weight: 600;">
-                                #{ptp.idTipoProducto.nombre}
-                            </span>
-                        </p:column>
+                    <f:selectItem itemLabel="Selecciona un producto"
+                                  itemValue="#{null}"
+                                  noSelectionOption="true" />
 
-                        <p:column headerText="Fecha Creación">
-                            <h:outputText value="#{ptp.fechaCreacion}">
-                                <f:convertDateTime pattern="dd/MM/yyyy HH:mm" timeZone="America/El_Salvador" />
-                            </h:outputText>
-                        </p:column>
+                    <f:selectItems
+                        value="#{productoTipoProductoFrm.listaProductos}"
+                        var="p"
+                        itemLabel="#{p.nombre}"
+                        itemValue="#{p.idProducto}" />
 
-                        <p:column headerText="Observaciones">
-                            <h:outputText value="#{ptp.observaciones}" />
-                        </p:column>
-                    </p:dataTable>
-                </h:form>
-            </div>
+                </p:selectOneMenu>
 
-        </div>
+                <p:outputLabel for="tipoProducto"
+                               value="Tipo de producto:" />
+
+                <p:selectOneMenu id="tipoProducto"
+                                 value="#{productoTipoProductoFrm.idTipoProductoSeleccionado}"
+                                 required="true"
+                                 requiredMessage="Selecciona un tipo de producto."
+                                 disabled="#{productoTipoProductoFrm.registroSeleccionado.idProductoTipoProducto != null}">
+
+                    <f:selectItem itemLabel="Selecciona un tipo"
+                                  itemValue="#{null}"
+                                  noSelectionOption="true" />
+
+                    <f:selectItems
+                        value="#{productoTipoProductoFrm.listaTiposProducto}"
+                        var="tipo"
+                        itemLabel="#{tipo.nombre}"
+                        itemValue="#{tipo.idTipoProducto}" />
+
+                </p:selectOneMenu>
+
+                <p:outputLabel for="observaciones"
+                               value="Observaciones:" />
+
+                <p:inputTextarea id="observaciones"
+                                 value="#{productoTipoProductoFrm.registroSeleccionado.observaciones}"
+                                 rows="3"
+                                 maxlength="500"
+                                 autoResize="false" />
+
+                <p:outputLabel value="Fecha de creación:" />
+
+                <p:datePicker
+                    value="#{productoTipoProductoFrm.registroSeleccionado.fechaCreacion}"
+                    pattern="dd/MM/yyyy HH:mm"
+                    showTime="true"
+                    disabled="true" />
+
+            </p:panelGrid>
+
+            <br />
+
+            <p:commandButton
+                value="Guardar asignación"
+                icon="pi pi-save"
+                action="#{productoTipoProductoFrm.guardar}"
+                process="@form"
+                update="@form" />
+
+            <p:commandButton
+                value="Nueva asignación / Limpiar"
+                icon="pi pi-plus"
+                action="#{productoTipoProductoFrm.nuevoRegistro}"
+                process="@this"
+                update="@form"
+                styleClass="ui-button-secondary"
+                style="margin-left: 8px;" />
+
+        </p:panel>
+
+        <br />
+
+        <p:panel header="Asignaciones actuales">
+
+            <p:dataTable
+                id="tablaAsignaciones"
+                value="#{productoTipoProductoFrm.listaProductoTipoProducto}"
+                var="ptp"
+                emptyMessage="No existen asignaciones registradas."
+                paginator="true"
+                rows="10"
+                >
+
+                <p:column headerText="Producto">
+                    <h:outputText
+                        value="#{ptp.idProducto.nombre}" />
+                </p:column>
+
+                <p:column headerText="Tipo de producto">
+                    <h:outputText
+                        value="#{ptp.idTipoProducto.nombre}" />
+                </p:column>
+
+                <p:column headerText="Fecha de creación">
+                    <h:outputText value="#{ptp.fechaCreacion}">
+                        <f:convertDateTime
+                            pattern="dd/MM/yyyy HH:mm"
+                            type="localDateTime"
+                            timeZone="America/El_Salvador" />
+                    </h:outputText>
+                </p:column>
+
+                <p:column headerText="Observaciones">
+                    <h:outputText value="#{ptp.observaciones}" />
+                </p:column>
+
+                <p:column headerText="Acciones"
+                          style="width: 180px;">
+
+                    <p:commandButton
+                        value="Editar"
+                        icon="pi pi-pencil"
+                        action="#{productoTipoProductoFrm.seleccionarRegistro(ptp)}"
+                        process="@this"
+                        update="@form"
+                        styleClass="ui-button-warning"
+                        style="margin-right: 5px;" />
+
+                    <p:commandButton
+                        value="Eliminar"
+                        icon="pi pi-trash"
+                        action="#{productoTipoProductoFrm.eliminar(ptp)}"
+                        process="@this"
+                        update="@form"
+                        styleClass="ui-button-danger">
+
+                        <p:confirm
+                            header="Confirmar eliminación"
+                            message="¿Seguro que deseas eliminar esta asignación?"
+                            icon="pi pi-exclamation-triangle" />
+
+                    </p:commandButton>
+
+                </p:column>
+
+            </p:dataTable>
+
+        </p:panel>
+
+        <p:confirmDialog global="true"
+                         showEffect="fade"
+                         hideEffect="fade"
+                         responsive="true"
+                         width="350">
+
+            <p:commandButton
+                value="Sí, eliminar"
+                type="button"
+                styleClass="ui-confirmdialog-yes ui-button-danger"
+                icon="pi pi-check" />
+
+            <p:commandButton
+                value="Cancelar"
+                type="button"
+                styleClass="ui-confirmdialog-no ui-button-secondary"
+                icon="pi pi-times" />
+
+        </p:confirmDialog>
+
+    </h:form>
+
     </ui:define>
-
 </ui:composition>

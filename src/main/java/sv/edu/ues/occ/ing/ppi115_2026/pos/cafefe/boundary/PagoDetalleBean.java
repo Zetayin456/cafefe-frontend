@@ -7,7 +7,7 @@ import jakarta.faces.view.ViewScoped;
 import java.io.Serializable;
 import java.util.List;
 import java.util.UUID;
-import sv.edu.ues.occ.ing.ppi115_2026.pos.cafefe.control.PagoDetalleDAO;
+import sv.edu.ues.occ.ing.ppi115_2026.pos.cafefe.control.PagoDetalleDAOInterface;
 import sv.edu.ues.occ.ing.ppi115_2026.pos.cafefe.entity.PagoDetalle;
 
 @Named("pagoDetalleBean")
@@ -15,7 +15,7 @@ import sv.edu.ues.occ.ing.ppi115_2026.pos.cafefe.entity.PagoDetalle;
 public class PagoDetalleBean implements Serializable {
 
     @Inject
-    private PagoDetalleDAO pagoDetalleDAO;
+    private PagoDetalleDAOInterface pagoDetalleDAO;
 
     private PagoDetalle registro;
     private List<PagoDetalle> lista;

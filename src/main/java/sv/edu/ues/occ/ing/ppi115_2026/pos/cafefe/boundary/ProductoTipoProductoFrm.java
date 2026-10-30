@@ -7,9 +7,12 @@ import jakarta.faces.view.ViewScoped;
 import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import sv.edu.ues.occ.ing.ppi115_2026.pos.cafefe.control.ProductoDAOInterface;
 import sv.edu.ues.occ.ing.ppi115_2026.pos.cafefe.control.ProductoTipoProductoDAOInterface;
 import sv.edu.ues.occ.ing.ppi115_2026.pos.cafefe.control.TipoProductoDAOInterface;
@@ -22,6 +25,9 @@ import sv.edu.ues.occ.ing.ppi115_2026.pos.cafefe.entity.TipoProducto;
 public class ProductoTipoProductoFrm implements Serializable {
 
     private static final long serialVersionUID = 1L;
+
+    private static final Logger LOGGER =
+            Logger.getLogger(ProductoTipoProductoFrm.class.getName());
 
     @Inject
     private ProductoTipoProductoDAOInterface productoTipoProductoDAO;
@@ -46,85 +52,296 @@ public class ProductoTipoProductoFrm implements Serializable {
         cargarDatos();
     }
 
-    public void nuevoRegistro() {
-        this.registroSeleccionado = new ProductoTipoProducto();
-        this.registroSeleccionado.setFechaCreacion(new Date());
-        this.idProductoSeleccionado = null;
-        this.idTipoProductoSeleccionado = null;
-    }
-
+    // Cargar las asignaciones, los productos y los tipos.
     public void cargarDatos() {
         try {
-            this.listaProductoTipoProducto = productoTipoProductoDAO.findRange(0, 100);
-            this.listaProductos = productoDAO.findRange(0, 100);
-            this.listaTiposProducto = tipoProductoDAO.findRange(0, 100);
+            List<ProductoTipoProducto> asignaciones =
+                    productoTipoProductoDAO.findAllWithRelations();
+
+            listaProductoTipoProducto = asignaciones != null
+                    ? asignaciones : new ArrayList<>();
+
+            List<Producto> productos = productoDAO.findActivos();
+
+            listaProductos = productos != null
+                    ? productos : new ArrayList<>();
+
+            List<TipoProducto> tipos = tipoProductoDAO.findActivos();
+
+            listaTiposProducto = tipos != null
+                    ? tipos : new ArrayList<>();
+
         } catch (Exception e) {
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Error al cargar listas de datos"));
+            LOGGER.log(Level.SEVERE,
+                    "Error al cargar las asignaciones de productos y tipos", e);
+
+            mensaje(FacesMessage.SEVERITY_ERROR,
+                    "Error", "No se pudieron cargar los datos.");
         }
     }
 
+    // Preparar el formulario para una asignación nueva.
+    public void nuevoRegistro() {
+        registroSeleccionado = new ProductoTipoProducto();
+        registroSeleccionado.setFechaCreacion(new Date());
+
+        idProductoSeleccionado = null;
+        idTipoProductoSeleccionado = null;
+    }
+
+    // Guardar una asignación nueva o actualizar una existente.
     public void guardar() {
         try {
-            if (idProductoSeleccionado != null && idTipoProductoSeleccionado != null) {
-                Producto prod = productoDAO.find(idProductoSeleccionado);
-                TipoProducto tipo = tipoProductoDAO.find(idTipoProductoSeleccionado);
-
-                // Validación requerida por la rúbrica: No permitir asignar tipos inactivos
-                if (tipo == null || Boolean.FALSE.equals(tipo.getActivo())) {
-                    FacesContext.getCurrentInstance().addMessage(null,
-                            new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "No se puede asignar un Tipo de Producto deshabilitado/inactivo."));
-                    return;
-                }
-
-                // Asignar entidades relacionadas
-                registroSeleccionado.setIdProducto(prod);
-                registroSeleccionado.setIdTipoProducto(tipo);
-
-                if (registroSeleccionado.getIdProductoTipoProducto() == null) {
-                    // Generar la llave primaria de la entidad
-                    registroSeleccionado.setIdProductoTipoProducto(UUID.randomUUID());
-
-                    productoTipoProductoDAO.create(registroSeleccionado);
-                    FacesContext.getCurrentInstance().addMessage(null,
-                            new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Asignación realizada correctamente"));
-                } else {
-                    productoTipoProductoDAO.edit(registroSeleccionado);
-                    FacesContext.getCurrentInstance().addMessage(null,
-                            new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Asignación actualizada"));
-                }
-                nuevoRegistro();
-                cargarDatos();
-            } else {
-                FacesContext.getCurrentInstance().addMessage(null,
-                        new FacesMessage(FacesMessage.SEVERITY_WARN, "Atención", "Debe seleccionar un Producto y un Tipo"));
+            if (registroSeleccionado == null) {
+                mensaje(FacesMessage.SEVERITY_WARN,
+                        "Aviso", "No hay un registro seleccionado.");
+                return;
             }
+
+            if (idProductoSeleccionado == null) {
+                mensaje(FacesMessage.SEVERITY_WARN,
+                        "Validación", "Selecciona un producto.");
+                return;
+            }
+
+            if (idTipoProductoSeleccionado == null) {
+                mensaje(FacesMessage.SEVERITY_WARN,
+                        "Validación", "Selecciona un tipo de producto.");
+                return;
+            }
+
+            // Buscar las entidades seleccionadas.
+            Producto producto =
+                    productoDAO.find(idProductoSeleccionado);
+
+            TipoProducto tipo =
+                    tipoProductoDAO.find(idTipoProductoSeleccionado);
+
+            if (producto == null || tipo == null) {
+                mensaje(FacesMessage.SEVERITY_ERROR,
+                        "Error", "El producto o el tipo no existe.");
+                return;
+            }
+
+            // Evitar asignar productos inactivos.
+            if (!Boolean.TRUE.equals(producto.getActivo())) {
+                mensaje(FacesMessage.SEVERITY_WARN,
+                        "Validación",
+                        "No puedes asignar tipos a un producto inactivo.");
+                return;
+            }
+
+            // Validación requerida: el tipo debe estar activo.
+            if (!Boolean.TRUE.equals(tipo.getActivo())) {
+                mensaje(FacesMessage.SEVERITY_WARN,
+                        "Validación",
+                        "No puedes asignar un tipo de producto inactivo.");
+                return;
+            }
+
+            // Evitar asignaciones duplicadas.
+            if (existeAsignacion(
+                    idProductoSeleccionado,
+                    idTipoProductoSeleccionado,
+                    registroSeleccionado.getIdProductoTipoProducto())) {
+
+                mensaje(FacesMessage.SEVERITY_WARN,
+                        "Asignación duplicada",
+                        "Este producto ya tiene asignado ese tipo.");
+                return;
+            }
+
+            registroSeleccionado.setIdProducto(producto);
+            registroSeleccionado.setIdTipoProducto(tipo);
+
+            if (registroSeleccionado.getFechaCreacion() == null) {
+                registroSeleccionado.setFechaCreacion(new Date());
+            }
+
+            // Crear o actualizar.
+            if (registroSeleccionado.getIdProductoTipoProducto() == null) {
+
+                registroSeleccionado.setIdProductoTipoProducto(
+                        UUID.randomUUID());
+
+                productoTipoProductoDAO.create(registroSeleccionado);
+
+                mensaje(FacesMessage.SEVERITY_INFO,
+                        "Éxito", "Asignación creada correctamente.");
+
+            } else {
+
+                productoTipoProductoDAO.edit(registroSeleccionado);
+
+                mensaje(FacesMessage.SEVERITY_INFO,
+                        "Éxito", "Asignación actualizada correctamente.");
+            }
+
+            nuevoRegistro();
+            cargarDatos();
+
         } catch (Exception e) {
-            FacesContext.getCurrentInstance().addMessage(null,
-                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "Error al guardar la asignación: " + e.getMessage()));
+            LOGGER.log(Level.SEVERE,
+                    "Error al guardar la asignación", e);
+
+            mensaje(FacesMessage.SEVERITY_ERROR,
+                    "Error",
+                    "No se pudo guardar la asignación. "
+                    + "Revisa el registro y las relaciones.");
         }
     }
 
-    // Método para seleccionar un registro existente de la tabla (Edición)
-    public void seleccionarRegistro(ProductoTipoProducto ptp) {
-        if (ptp != null) {
-            this.registroSeleccionado = ptp;
-            this.idProductoSeleccionado = ptp.getIdProducto() != null ? ptp.getIdProducto().getIdProducto() : null;
-            this.idTipoProductoSeleccionado = ptp.getIdTipoProducto() != null ? ptp.getIdTipoProducto().getIdTipoProducto() : null;
+    // Comprobar si el producto ya tiene asignado ese tipo.
+    private boolean existeAsignacion(
+            UUID idProducto,
+            UUID idTipoProducto,
+            UUID idAsignacionActual) {
+
+        if (listaProductoTipoProducto == null) {
+            return false;
+        }
+
+        for (ProductoTipoProducto asignacion : listaProductoTipoProducto) {
+
+            if (asignacion == null) {
+                continue;
+            }
+
+            // Al editar, ignorar el registro que estamos modificando.
+            if (idAsignacionActual != null
+                    && idAsignacionActual.equals(
+                            asignacion.getIdProductoTipoProducto())) {
+                continue;
+            }
+
+            Producto producto = asignacion.getIdProducto();
+            TipoProducto tipo = asignacion.getIdTipoProducto();
+
+            if (producto != null && tipo != null
+                    && idProducto.equals(producto.getIdProducto())
+                    && idTipoProducto.equals(tipo.getIdTipoProducto())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // Seleccionar una asignación para editarla.
+    public void seleccionarRegistro(ProductoTipoProducto asignacion) {
+        if (asignacion == null) {
+            return;
+        }
+
+        registroSeleccionado = new ProductoTipoProducto();
+
+        registroSeleccionado.setIdProductoTipoProducto(
+                asignacion.getIdProductoTipoProducto());
+
+        registroSeleccionado.setFechaCreacion(
+                asignacion.getFechaCreacion());
+
+        registroSeleccionado.setObservaciones(
+                asignacion.getObservaciones());
+
+        registroSeleccionado.setIdProducto(
+                asignacion.getIdProducto());
+
+        registroSeleccionado.setIdTipoProducto(
+                asignacion.getIdTipoProducto());
+
+        idProductoSeleccionado =
+                asignacion.getIdProducto() != null
+                ? asignacion.getIdProducto().getIdProducto()
+                : null;
+
+        idTipoProductoSeleccionado =
+                asignacion.getIdTipoProducto() != null
+                ? asignacion.getIdTipoProducto().getIdTipoProducto()
+                : null;
+    }
+
+    // Eliminar una asignación.
+    public void eliminar(ProductoTipoProducto asignacion) {
+        if (asignacion == null
+                || asignacion.getIdProductoTipoProducto() == null) {
+
+            mensaje(FacesMessage.SEVERITY_WARN,
+                    "Aviso", "Selecciona una asignación válida.");
+            return;
+        }
+
+        try {
+            productoTipoProductoDAO.remove(asignacion);
+
+            mensaje(FacesMessage.SEVERITY_INFO,
+                    "Éxito", "Asignación eliminada correctamente.");
+
+            if (registroSeleccionado != null
+                    && asignacion.getIdProductoTipoProducto().equals(
+                            registroSeleccionado.getIdProductoTipoProducto())) {
+                nuevoRegistro();
+            }
+
+            cargarDatos();
+
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE,
+                    "Error al eliminar la asignación", e);
+
+            mensaje(FacesMessage.SEVERITY_ERROR,
+                    "Error",
+                    "No se pudo eliminar la asignación. "
+                    + "Comprueba si existen restricciones en la base de datos.");
         }
     }
 
-    // Getters y Setters
-    public List<ProductoTipoProducto> getListaProductoTipoProducto() { return listaProductoTipoProducto; }
-    public List<Producto> getListaProductos() { return listaProductos; }
-    public List<TipoProducto> getListaTiposProducto() { return listaTiposProducto; }
+    private void mensaje(
+            FacesMessage.Severity severidad,
+            String titulo,
+            String detalle) {
 
-    public ProductoTipoProducto getRegistroSeleccionado() { return registroSeleccionado; }
-    public void setRegistroSeleccionado(ProductoTipoProducto registroSeleccionado) { this.registroSeleccionado = registroSeleccionado; }
+        FacesContext.getCurrentInstance().addMessage(
+                null, new FacesMessage(severidad, titulo, detalle));
+    }
 
-    public UUID getIdProductoSeleccionado() { return idProductoSeleccionado; }
-    public void setIdProductoSeleccionado(UUID idProductoSeleccionado) { this.idProductoSeleccionado = idProductoSeleccionado; }
+    // Getters y setters.
 
-    public UUID getIdTipoProductoSeleccionado() { return idTipoProductoSeleccionado; }
-    public void setIdTipoProductoSeleccionado(UUID idTipoProductoSeleccionado) { this.idTipoProductoSeleccionado = idTipoProductoSeleccionado; }
+    public List<ProductoTipoProducto> getListaProductoTipoProducto() {
+        return listaProductoTipoProducto;
+    }
+
+    public List<Producto> getListaProductos() {
+        return listaProductos;
+    }
+
+    public List<TipoProducto> getListaTiposProducto() {
+        return listaTiposProducto;
+    }
+
+    public ProductoTipoProducto getRegistroSeleccionado() {
+        return registroSeleccionado;
+    }
+
+    public void setRegistroSeleccionado(
+            ProductoTipoProducto registroSeleccionado) {
+        this.registroSeleccionado = registroSeleccionado;
+    }
+
+    public UUID getIdProductoSeleccionado() {
+        return idProductoSeleccionado;
+    }
+
+    public void setIdProductoSeleccionado(UUID idProductoSeleccionado) {
+        this.idProductoSeleccionado = idProductoSeleccionado;
+    }
+
+    public UUID getIdTipoProductoSeleccionado() {
+        return idTipoProductoSeleccionado;
+    }
+
+    public void setIdTipoProductoSeleccionado(
+            UUID idTipoProductoSeleccionado) {
+        this.idTipoProductoSeleccionado = idTipoProductoSeleccionado;
+    }
 }

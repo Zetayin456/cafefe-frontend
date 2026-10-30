@@ -27,7 +27,7 @@
                             
                             <div>
                                 <p:outputLabel value="Producto" for="cmbProducto" style="font-weight: 600; display: block; margin-bottom: 6px;"/>
-                                <p:selectOneMenu id="cmbProducto" value="#{productoCaracteristicaFrm.idProductoSeleccionado}" style="width: 100%;" required="true">
+                                <p:selectOneMenu id="cmbProducto" value="#{productoCaracteristicaFrm.idProductoSeleccionado}" style="width: 100%;" required="true" disabled="#{productoCaracteristicaFrm.registroSeleccionado.idProductoCaracteristica != null}">
                                     <f:selectItem itemLabel="-- Seleccionar Producto --" itemValue="" />
                                     <f:selectItems value="#{productoCaracteristicaFrm.listaProductos}" var="p" itemLabel="#{p.nombre}" itemValue="#{p.idProducto}" />
                                 </p:selectOneMenu>
@@ -35,7 +35,7 @@
 
                             <div>
                                 <p:outputLabel value="Característica" for="cmbCaracteristica" style="font-weight: 600; display: block; margin-bottom: 6px;"/>
-                                <p:selectOneMenu id="cmbCaracteristica" value="#{productoCaracteristicaFrm.idCaracteristicaSeleccionada}" style="width: 100%;" required="true">
+                                <p:selectOneMenu id="cmbCaracteristica" value="#{productoCaracteristicaFrm.idCaracteristicaSeleccionada}" style="width: 100%;" required="true" disabled="#{productoCaracteristicaFrm.registroSeleccionado.idProductoCaracteristica != null}">
                                     <f:selectItem itemLabel="-- Seleccionar Característica --" itemValue="" />
                                     <f:selectItems value="#{productoCaracteristicaFrm.listaCaracteristicas}" var="c" itemLabel="#{c.nombre}" itemValue="#{c.idCaracteristica}" />
                                 </p:selectOneMenu>
@@ -93,7 +93,14 @@
                             <p:column headerText="Valor / Detalle">
                                 <h:outputText value="#{pc.valor}" style="font-style: italic; font-weight: bold; color: #047857;" />
                             </p:column>
+                            <p:column headerText="Acciones">
+                                <p:commandButton icon="pi pi-pencil" title="Editar" action="#{productoCaracteristicaFrm.seleccionar(pc)}" update=":frmNuevo" />
+                                <p:commandButton icon="pi pi-trash" title="Eliminar" action="#{productoCaracteristicaFrm.eliminar(pc)}" update=":frmTabla:tblProductoCarac :messages">
+                                    <p:confirm header="Confirmar eliminación" message="¿Desea eliminar esta asignación?" icon="pi pi-exclamation-triangle" />
+                                </p:commandButton>
+                            </p:column>
                         </p:dataTable>
+                        <p:confirmDialog global="true"><p:commandButton value="Sí" type="button" styleClass="ui-confirmdialog-yes ui-button-danger"/><p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary"/></p:confirmDialog>
                     </h:form>
                 </p:card>
             </div>

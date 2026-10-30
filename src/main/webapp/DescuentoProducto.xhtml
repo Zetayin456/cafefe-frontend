@@ -10,21 +10,57 @@
     <ui:define name="header_titulo">Gestión de Descuento por Producto</ui:define>
 
     <ui:define name="contenido">
-        <h:form id="frmAcciones">
-            <p:commandButton value="Asignar Descuento a Producto" 
-                             styleClass="btn-primary" 
-                             icon="pi pi-plus" 
-                             actionListener="#{descuentoProductoFrm.nuevoRegistro()}"
-                             update=":frmNuevo"
-                             oncomplete="PF('dlgNuevo').show()" 
-                             style="margin-bottom: 15px;" />
+        <h:form id="frmNuevo">
+            <p:panel header="Asignar descuento a producto" style="margin-top: 1rem;">
+                <h:panelGrid columns="2" cellpadding="5">
+                    <p:outputLabel value="Producto:" for="cboProducto" />
+                    <p:selectOneMenu id="cboProducto"
+                                     value="#{descuentoProductoFrm.idProductoSeleccionado}"
+                                     disabled="#{descuentoProductoFrm.registroSeleccionado.idDescuentoProducto != null}"
+                                     required="true">
+                        <f:selectItem itemLabel="-- Seleccione --" itemValue="#{null}" />
+                        <f:selectItems value="#{descuentoProductoFrm.listaProductos}" var="prod"
+                                       itemLabel="#{prod.nombre}" itemValue="#{prod.idProducto}" />
+                    </p:selectOneMenu>
+
+                    <p:outputLabel value="Descuento:" for="cboDescuento" />
+                    <p:selectOneMenu id="cboDescuento"
+                                     value="#{descuentoProductoFrm.idDescuentoSeleccionado}"
+                                     disabled="#{descuentoProductoFrm.registroSeleccionado.idDescuentoProducto != null}"
+                                     required="true">
+                        <f:selectItem itemLabel="-- Seleccione --" itemValue="#{null}" />
+                        <f:selectItems value="#{descuentoProductoFrm.listaDescuentos}" var="desc"
+                                       itemLabel="#{desc.nombre}" itemValue="#{desc.idDescuento}" />
+                    </p:selectOneMenu>
+
+                    <p:outputLabel value="Valor:" for="txtValor" />
+                    <p:inputNumber id="txtValor" value="#{descuentoProductoFrm.registroSeleccionado.valor}" decimalPlaces="0"/>
+
+                    <p:outputLabel value="Fecha Desde:" for="calDesde" />
+                    <p:datePicker id="calDesde" value="#{descuentoProductoFrm.registroSeleccionado.fechaDesde}" showTime="true" disabled="#{descuentoProductoFrm.registroSeleccionado.idDescuentoProducto != null}"/>
+
+                    <p:outputLabel value="Fecha Hasta:" for="calHasta" />
+                    <p:datePicker id="calHasta" value="#{descuentoProductoFrm.registroSeleccionado.fechaHasta}" showTime="true" disabled="#{descuentoProductoFrm.registroSeleccionado.idDescuentoProducto != null}"/>
+
+                    <p:outputLabel value="Observaciones:" for="txtObs" />
+                    <p:inputTextarea id="txtObs" value="#{descuentoProductoFrm.registroSeleccionado.observaciones}"/>
+                </h:panelGrid>
+
+                <div style="text-align: right; margin-top: 10px;">
+                    <p:commandButton value="Guardar"
+                                     actionListener="#{descuentoProductoFrm.guardar()}"
+                                     update=":frmTabla:tblDescuentoProducto :frmNuevo :messages"
+                                     icon="pi pi-check" />
+                    <p:commandButton value="Nuevo" actionListener="#{descuentoProductoFrm.nuevoRegistro()}" update="frmNuevo" process="@this" icon="pi pi-plus" styleClass="ui-button-secondary" />
+                </div>
+            </p:panel>
         </h:form>
 
         <h:form id="frmTabla">
-            <p:dataTable id="tblDescuentoProducto" 
-                         var="dp" 
-                         value="#{descuentoProductoFrm.listaDescuentoProducto}" 
-                         paginator="true" 
+            <p:dataTable id="tblDescuentoProducto"
+                         var="dp"
+                         value="#{descuentoProductoFrm.listaDescuentoProducto}"
+                         paginator="true"
                          rows="5"
                          rowsPerPageTemplate="5,10,15">
 
@@ -57,60 +93,19 @@
                 </p:column>
 
                 <p:column headerText="Acciones">
-                    <p:commandButton icon="pi pi-pencil" 
-                                     actionListener="#{descuentoProductoFrm.seleccionarRegistro(dp)}" 
-                                     update=":frmNuevo" 
-                                     oncomplete="PF('dlgNuevo').show()" 
+                    <p:commandButton icon="pi pi-pencil"
+                                     actionListener="#{descuentoProductoFrm.seleccionarRegistro(dp)}"
+                                     update=":frmNuevo"
                                      process="@this" />
+                    <p:commandButton icon="pi pi-trash" title="Eliminar" action="#{descuentoProductoFrm.eliminar(dp)}" update=":frmTabla:tblDescuentoProducto :messages">
+                        <p:confirm header="Confirmar eliminación" message="¿Desea eliminar esta asignación de descuento?" icon="pi pi-exclamation-triangle" />
+                    </p:commandButton>
                 </p:column>
             </p:dataTable>
+            <p:confirmDialog global="true"><p:commandButton value="Sí" type="button" styleClass="ui-confirmdialog-yes ui-button-danger"/><p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary"/></p:confirmDialog>
         </h:form>
 
-        <p:dialog header="Asignar Descuento a Producto" widgetVar="dlgNuevo" modal="true" responsive="true">
-            <h:form id="frmNuevo">
-                <h:panelGrid columns="2" cellpadding="5">
-                    <p:outputLabel value="Producto:" for="cboProducto" />
-                    <p:selectOneMenu id="cboProducto" 
-                                     value="#{descuentoProductoFrm.idProductoSeleccionado}" 
-                                     disabled="#{descuentoProductoFrm.registroSeleccionado.idDescuentoProducto != null}" 
-                                     required="true">
-                        <f:selectItem itemLabel="-- Seleccione --" itemValue="#{null}" />
-                        <f:selectItems value="#{descuentoProductoFrm.listaProductos}" var="prod" 
-                                       itemLabel="#{prod.nombre}" itemValue="#{prod.idProducto}" />
-                    </p:selectOneMenu>
 
-                    <p:outputLabel value="Descuento:" for="cboDescuento" />
-                    <p:selectOneMenu id="cboDescuento" 
-                                     value="#{descuentoProductoFrm.idDescuentoSeleccionado}" 
-                                     disabled="#{descuentoProductoFrm.registroSeleccionado.idDescuentoProducto != null}" 
-                                     required="true">
-                        <f:selectItem itemLabel="-- Seleccione --" itemValue="#{null}" />
-                        <f:selectItems value="#{descuentoProductoFrm.listaDescuentos}" var="desc" 
-                                       itemLabel="#{desc.nombre}" itemValue="#{desc.idDescuento}" />
-                    </p:selectOneMenu>
-
-                    <p:outputLabel value="Valor:" for="txtValor" />
-                    <p:inputNumber id="txtValor" value="#{descuentoProductoFrm.registroSeleccionado.valor}" decimalPlaces="0"/>
-
-                    <p:outputLabel value="Fecha Desde:" for="calDesde" />
-                    <p:datePicker id="calDesde" value="#{descuentoProductoFrm.registroSeleccionado.fechaDesde}" showTime="true"/>
-
-                    <p:outputLabel value="Fecha Hasta:" for="calHasta" />
-                    <p:datePicker id="calHasta" value="#{descuentoProductoFrm.registroSeleccionado.fechaHasta}" showTime="true"/>
-
-                    <p:outputLabel value="Observaciones:" for="txtObs" />
-                    <p:inputTextarea id="txtObs" value="#{descuentoProductoFrm.registroSeleccionado.observaciones}"/>
-                </h:panelGrid>
-
-                <div style="text-align: right; margin-top: 10px;">
-                    <p:commandButton value="Guardar" 
-                                     actionListener="#{descuentoProductoFrm.guardar()}" 
-                                     update=":frmTabla:tblDescuentoProducto :frmNuevo :messages" 
-                                     oncomplete="if (!args.validationFailed) PF('dlgNuevo').hide()" 
-                                     icon="pi pi-check" />
-                </div>
-            </h:form>
-        </p:dialog>
     </ui:define>
 
 </ui:composition>

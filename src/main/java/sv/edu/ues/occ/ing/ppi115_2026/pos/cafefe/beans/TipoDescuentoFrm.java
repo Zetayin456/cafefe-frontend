@@ -63,6 +63,13 @@ public class TipoDescuentoFrm implements Serializable {
 public void guardar() {
     try {
         if (this.registroSeleccionado != null) {
+            Integer limite = this.registroSeleccionado.getDescuentoMaximo();
+            if (limite == null || limite < 0 || limite > 100) {
+                FacesContext.getCurrentInstance().addMessage(null,
+                        new FacesMessage(FacesMessage.SEVERITY_WARN, "Validación",
+                                "El descuento máximo debe estar entre 0% y 100%."));
+                return;
+            }
             if (this.registroSeleccionado.getIdTipoDescuento() == null) {
                 this.registroSeleccionado.setIdTipoDescuento(UUID.randomUUID());
                 tipoDescuentoDAO.create(this.registroSeleccionado);
@@ -78,6 +85,19 @@ public void guardar() {
         Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Error al guardar TipoDescuento", ex);
     }
 }
+
+    public void seleccionar(TipoDescuento registro) { this.registroSeleccionado = registro; }
+
+    public void eliminar(TipoDescuento registro) {
+        try {
+            tipoDescuentoDAO.remove(registro);
+            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", "Tipo de descuento eliminado."));
+        } catch (Exception ex) {
+            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "No se pudo eliminar: " + ex.getMessage()));
+        }
+        btnNuevoHandler();
+        cargarRegistros();
+    }
 
     public List<TipoDescuento> getModelo() {
         return registros;

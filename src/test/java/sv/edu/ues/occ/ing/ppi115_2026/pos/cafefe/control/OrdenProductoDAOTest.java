@@ -64,12 +64,11 @@ public class OrdenProductoDAOTest {
         OrdenProducto entidad = new OrdenProducto();
         entidad.setIdOrdenProducto(UUID.randomUUID());
 
-        // En tu DAO, el método eliminar hace primero em.merge(entidad)
-        when(em.merge(entidad)).thenReturn(entidad);
+        when(em.find(OrdenProducto.class, entidad.getIdOrdenProducto())).thenReturn(entidad);
 
         ordenProductoDAO.eliminar(entidad);
 
-        verify(em, times(1)).merge(entidad);
+        verify(em, times(1)).find(OrdenProducto.class, entidad.getIdOrdenProducto());
         verify(em, times(1)).remove(entidad);
     }
 }

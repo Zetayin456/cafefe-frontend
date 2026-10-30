@@ -4,92 +4,63 @@ import jakarta.ejb.Stateless;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import java.io.Serializable;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import sv.edu.ues.occ.ing.ppi115_2026.pos.cafefe.entity.FacturaOrdenProducto;
 
 @Stateless
-public class FacturaOrdenProductoDAO implements Serializable {
+public class FacturaOrdenProductoDAO extends DefaultDAO<FacturaOrdenProducto>
+        implements FacturaOrdenProductoDAOInterface, Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @PersistenceContext(unitName = "cafefePU")
     private EntityManager em;
 
-    private static final Logger LOG = Logger.getLogger(FacturaOrdenProductoDAO.class.getName());
+    public FacturaOrdenProductoDAO() { super(FacturaOrdenProducto.class); }
 
-    public void crear(FacturaOrdenProducto facturaOrdenProducto) {
-        try {
-            if (facturaOrdenProducto != null) {
-                em.persist(facturaOrdenProducto);
-            }
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, "Error al crear FacturaOrdenProducto", e);
+    @Override
+    protected EntityManager getEntityManager() { return em; }
+
+    @Override
+    public void crear(FacturaOrdenProducto registro) { create(registro); }
+
+    @Override
+    public FacturaOrdenProducto modificar(FacturaOrdenProducto registro) { return edit(registro); }
+
+    @Override
+    public void eliminar(FacturaOrdenProducto registro) {
+        if (registro == null || registro.getIdFacturaOrdenProducto() == null) {
+            throw new IllegalArgumentException("El registro a eliminar no es válido.");
         }
+        FacturaOrdenProducto managed = find(registro.getIdFacturaOrdenProducto());
+        if (managed != null) em.remove(managed);
     }
 
-    public void modificar(FacturaOrdenProducto facturaOrdenProducto) {
-        try {
-            if (facturaOrdenProducto != null) {
-                em.merge(facturaOrdenProducto);
-            }
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, "Error al modificar FacturaOrdenProducto", e);
-        }
-    }
-
-    public void eliminar(FacturaOrdenProducto facturaOrdenProducto) {
-        try {
-            if (facturaOrdenProducto != null) {
-                FacturaOrdenProducto fop = em.merge(facturaOrdenProducto);
-                em.remove(fop);
-            }
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, "Error al eliminar FacturaOrdenProducto", e);
-        }
-    }
-
+    @Override
     public FacturaOrdenProducto buscarPorId(Object id) {
+        if (id == null) return null;
         try {
-            if (id == null) {
-                return null;
-            }
-            if (id instanceof String strId) {
-                return em.find(FacturaOrdenProducto.class, UUID.fromString(strId));
-            }
-            return em.find(FacturaOrdenProducto.class, id);
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, "Error al buscar FacturaOrdenProducto por ID", e);
+            UUID uuid = id instanceof UUID value ? value : UUID.fromString(id.toString());
+            return find(uuid);
+        } catch (IllegalArgumentException e) {
             return null;
         }
     }
 
-    public List<FacturaOrdenProducto> findRange(int first, int pageSize) {
-        try {
-            var cb = em.getCriteriaBuilder();
-            var cq = cb.createQuery(FacturaOrdenProducto.class);
-            var root = cq.from(FacturaOrdenProducto.class);
-            cq.select(root);
-            var query = em.createQuery(cq);
-            query.setFirstResult(first);
-            query.setMaxResults(pageSize);
-            return query.getResultList();
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, "Error al listar FacturaOrdenProducto", e);
-            return Collections.emptyList();
-        }
+    @Override
+    public List<FacturaOrdenProducto> findAllWithRelations() {
+        return em.createQuery("SELECT DISTINCT fop FROM FacturaOrdenProducto fop "
+                + "LEFT JOIN FETCH fop.idFactura "
+                + "LEFT JOIN FETCH fop.idOrdenProducto op "
+                + "LEFT JOIN FETCH op.idProducto ORDER BY fop.idFacturaOrdenProducto",
+                FacturaOrdenProducto.class).getResultList();
     }
 
-    public int count() {
-        try {
-            var cb = em.getCriteriaBuilder();
-            var cq = cb.createQuery(Long.class);
-            cq.select(cb.count(cq.from(FacturaOrdenProducto.class)));
-            return em.createQuery(cq).getSingleResult().intValue();
-        } catch (Exception e) {
-            LOG.log(Level.SEVERE, "Error al contar FacturaOrdenProducto", e);
-            return 0;
-        }
+    @Override
+    public List<FacturaOrdenProducto> findRange(int first, int pageSize) {
+        if (first < 0 || pageSize <= 0) throw new IllegalArgumentException("Parámetros de paginación inválidos.");
+        return em.createQuery("SELECT fop FROM FacturaOrdenProducto fop ORDER BY fop.idFacturaOrdenProducto", FacturaOrdenProducto.class)
+                .setFirstResult(first).setMaxResults(pageSize).getResultList();
     }
 }

@@ -18,6 +18,7 @@
                 
                 <p:commandButton value="Guardar" actionListener="#{cajaBean.guardar()}" 
                                  update="frmCaja :messages" icon="pi pi-save" />
+                <p:commandButton value="Nuevo" action="#{cajaBean.nuevoRegistro()}" update="frmCaja" immediate="true" icon="pi pi-plus" />
             </p:panel>
 
             <p:spacer height="20" />
@@ -29,7 +30,14 @@
                 <p:column headerText="Nombre">
                     <h:outputText value="#{c.nombre}" />
                 </p:column>
+                <p:column headerText="Acciones">
+                    <p:commandButton icon="pi pi-pencil" title="Editar" action="#{cajaBean.seleccionar(c)}" update="frmCaja" />
+                    <p:commandButton icon="pi pi-trash" title="Eliminar" action="#{cajaBean.eliminar(c)}" update="frmCaja :messages">
+                        <p:confirm header="Confirmar eliminación" message="¿Desea eliminar esta caja?" icon="pi pi-exclamation-triangle" />
+                    </p:commandButton>
+                </p:column>
             </p:dataTable>
+            <p:confirmDialog global="true"><p:commandButton value="Sí" type="button" styleClass="ui-confirmdialog-yes ui-button-danger"/><p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary"/></p:confirmDialog>
         </h:form>
     </ui:define>
 

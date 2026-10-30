@@ -1,4 +1,3 @@
-
 <?xml version="1.0" encoding="UTF-8" ?>
 <ui:composition xmlns="http://www.w3.org/1999/xhtml"
                 xmlns:ui="jakarta.faces.facelets"
@@ -15,7 +14,7 @@
 
     <ui:define name="contenido">
 
-        <p:messages id="messages"
+        <p:messages id="messagesEmpleado"
                     showDetail="true"
                     closable="true" />
 
@@ -88,7 +87,7 @@
                                 <p:commandButton value="Guardar"
                                                  actionListener="#{empleadoFrm.guardar()}"
                                                  process="@form"
-                                                 update=":frmTabla:tblEmpleado :messages formMessages"
+                                                 update=":frmTabla:tblEmpleado :messagesEmpleado formMessages"
                                                  icon="pi pi-save"
                                                  styleClass="ui-button-info"
                                                  style="flex: 1;" />
@@ -154,7 +153,7 @@
                                                  title="Desactivar"
                                                  actionListener="#{empleadoFrm.eliminar(e)}"
                                                  process="@this"
-                                                 update="tblEmpleado :messages"
+                                                 update="tblEmpleado :messagesEmpleado"
                                                  disabled="#{not e.activo}"
                                                  styleClass="ui-button-danger">
 

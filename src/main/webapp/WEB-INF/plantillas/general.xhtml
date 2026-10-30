@@ -13,7 +13,9 @@
     </h:head>
 
     <h:body>
-        <p:growl id="messages" showDetail="true" />
+        <p:growl id="messages" showDetail="true" life="6000">
+            <p:autoUpdate />
+        </p:growl>
 
         <!-- 1. Header (Banner dividido en 3) -->
         <header class="header-container">

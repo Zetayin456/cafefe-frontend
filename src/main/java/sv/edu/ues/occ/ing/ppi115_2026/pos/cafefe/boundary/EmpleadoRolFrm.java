@@ -10,7 +10,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import sv.edu.ues.occ.ing.ppi115_2026.pos.cafefe.control.EmpleadoDAOInterface;
 import sv.edu.ues.occ.ing.ppi115_2026.pos.cafefe.control.EmpleadoRolDAOInterface;
 import sv.edu.ues.occ.ing.ppi115_2026.pos.cafefe.control.RolDAOInterface;
@@ -24,6 +25,9 @@ public class EmpleadoRolFrm implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    private static final Logger LOGGER =
+            Logger.getLogger(EmpleadoRolFrm.class.getName());
+
     @Inject
     private EmpleadoRolDAOInterface empleadoRolDAO;
 
@@ -33,125 +37,287 @@ public class EmpleadoRolFrm implements Serializable {
     @Inject
     private RolDAOInterface rolDAO;
 
+    private List<EmpleadoRol> listaAsignaciones;
     private List<Empleado> listaEmpleados;
     private List<Rol> listaRoles;
 
+    private EmpleadoRol registroSeleccionado;
     private UUID idEmpleadoSeleccionado;
     private UUID idRolSeleccionado;
 
     @PostConstruct
     public void init() {
-        cargarListas();
+        nuevoRegistro();
+        cargarDatos();
     }
 
-    public void cargarListas() {
+    public void cargarDatos() {
         try {
-            this.listaEmpleados = empleadoDAO.findRange(0, 1000);
-            this.listaRoles = rolDAO.findRange(0, 1000);
+            List<EmpleadoRol> asignaciones =
+                    empleadoRolDAO.findAllWithRelations();
 
-            if (this.listaEmpleados == null) {
-                this.listaEmpleados = new ArrayList<>();
-            }
-            if (this.listaRoles == null) {
-                this.listaRoles = new ArrayList<>();
-            }
+            listaAsignaciones = asignaciones != null
+                    ? asignaciones : new ArrayList<>();
+
+            List<Empleado> empleados =
+                    empleadoDAO.findRange(0, 1000);
+
+            listaEmpleados = empleados != null
+                    ? empleados : new ArrayList<>();
+
+            List<Rol> roles = rolDAO.findRange(0, 1000);
+
+            listaRoles = roles != null
+                    ? roles : new ArrayList<>();
+
         } catch (Exception e) {
-            e.printStackTrace();
-            if (this.listaEmpleados == null) this.listaEmpleados = new ArrayList<>();
-            if (this.listaRoles == null) this.listaRoles = new ArrayList<>();
+            LOGGER.log(Level.SEVERE,
+                    "Error al cargar las asignaciones de empleados y roles", e);
+
+            mensaje(FacesMessage.SEVERITY_ERROR,
+                    "Error", "No se pudieron cargar los datos.");
         }
+    }
+
+    public void nuevoRegistro() {
+        registroSeleccionado = new EmpleadoRol();
+        registroSeleccionado.setActivo(true);
+
+        idEmpleadoSeleccionado = null;
+        idRolSeleccionado = null;
+    }
+
+    public void seleccionar(EmpleadoRol asignacion) {
+        if (asignacion == null) {
+            return;
+        }
+
+        // Copiar la asignación seleccionada al formulario.
+        registroSeleccionado = new EmpleadoRol();
+
+        registroSeleccionado.setIdEmpleadoRol(
+                asignacion.getIdEmpleadoRol());
+
+        registroSeleccionado.setActivo(asignacion.getActivo());
+
+        registroSeleccionado.setObservaciones(
+                asignacion.getObservaciones());
+
+        registroSeleccionado.setIdEmpleado(
+                asignacion.getIdEmpleado());
+
+        registroSeleccionado.setIdRol(
+                asignacion.getIdRol());
+
+        idEmpleadoSeleccionado =
+                asignacion.getIdEmpleado() != null
+                ? asignacion.getIdEmpleado().getIdEmpleado()
+                : null;
+
+        idRolSeleccionado =
+                asignacion.getIdRol() != null
+                ? asignacion.getIdRol().getIdRol()
+                : null;
     }
 
     public void guardarCambios() {
-        if (idEmpleadoSeleccionado == null) {
-            mensajeWarn("Debe seleccionar un empleado.");
-            return;
-        }
+        try {
+            if (registroSeleccionado == null) {
+                mensaje(FacesMessage.SEVERITY_WARN,
+                        "Aviso", "No hay una asignación seleccionada.");
+                return;
+            }
 
-        if (idRolSeleccionado == null) {
-            mensajeWarn("Debe seleccionar un rol para asignar.");
+            if (idEmpleadoSeleccionado == null) {
+                mensaje(FacesMessage.SEVERITY_WARN,
+                        "Validación", "Selecciona un empleado.");
+                return;
+            }
+
+            if (idRolSeleccionado == null) {
+                mensaje(FacesMessage.SEVERITY_WARN,
+                        "Validación", "Selecciona un rol.");
+                return;
+            }
+
+            // Buscar los registros por sus UUID.
+            Empleado empleado =
+                    empleadoDAO.find(idEmpleadoSeleccionado);
+
+            Rol rol = rolDAO.find(idRolSeleccionado);
+
+            if (empleado == null || rol == null) {
+                mensaje(FacesMessage.SEVERITY_ERROR,
+                        "Error", "El empleado o el rol no existe.");
+                return;
+            }
+
+            // Para crear una asignación, ambos deben estar activos.
+         boolean empleadoActivo = Boolean.TRUE.equals(empleado.getActivo());
+boolean rolActivo = Boolean.TRUE.equals(rol.getActivo());
+
+if (registroSeleccionado.getIdEmpleadoRol() == null) {
+
+    // Para crear, ambos deben estar activos.
+    if (!empleadoActivo || !rolActivo) {
+        mensaje(FacesMessage.SEVERITY_WARN,
+                "Validación",
+                "Solo puedes asignar empleados y roles activos.");
+        return;
+    }
+
+} else {
+
+    // Para editar, permitir conservar una referencia inactiva,
+    // pero no cambiarla por otra referencia inactiva.
+    EmpleadoRol original = empleadoRolDAO.find(
+            registroSeleccionado.getIdEmpleadoRol());
+
+    boolean mismoEmpleado = original != null
+            && original.getIdEmpleado() != null
+            && original.getIdEmpleado().getIdEmpleado()
+                    .equals(idEmpleadoSeleccionado);
+
+    boolean mismoRol = original != null
+            && original.getIdRol() != null
+            && original.getIdRol().getIdRol()
+                    .equals(idRolSeleccionado);
+
+    if (!empleadoActivo && !mismoEmpleado) {
+        mensaje(FacesMessage.SEVERITY_WARN,
+                "Validación",
+                "No puedes asignar un empleado inactivo.");
+        return;
+    }
+
+    if (!rolActivo && !mismoRol) {
+        mensaje(FacesMessage.SEVERITY_WARN,
+                "Validación",
+                "No puedes asignar un rol inactivo.");
+        return;
+    }
+}
+
+            // Evitar duplicar una asignación activa.
+            for (EmpleadoRol existente : listaAsignaciones) {
+                if (existente == null
+                        || !Boolean.TRUE.equals(existente.getActivo())) {
+                    continue;
+                }
+
+                if (registroSeleccionado.getIdEmpleadoRol() != null
+                        && registroSeleccionado.getIdEmpleadoRol()
+                                .equals(existente.getIdEmpleadoRol())) {
+                    continue;
+                }
+
+                if (existente.getIdEmpleado() != null
+                        && existente.getIdRol() != null
+                        && existente.getIdEmpleado().getIdEmpleado()
+                                .equals(idEmpleadoSeleccionado)
+                        && existente.getIdRol().getIdRol()
+                                .equals(idRolSeleccionado)) {
+
+                    mensaje(FacesMessage.SEVERITY_WARN,
+                            "Asignación duplicada",
+                            "Este empleado ya tiene asignado ese rol.");
+                    return;
+                }
+            }
+
+            registroSeleccionado.setIdEmpleado(empleado);
+            registroSeleccionado.setIdRol(rol);
+
+            if (registroSeleccionado.getActivo() == null) {
+                registroSeleccionado.setActivo(true);
+            }
+
+            if (registroSeleccionado.getIdEmpleadoRol() == null) {
+                registroSeleccionado.setIdEmpleadoRol(
+                        UUID.randomUUID());
+
+                empleadoRolDAO.create(registroSeleccionado);
+
+                mensaje(FacesMessage.SEVERITY_INFO,
+                        "Éxito", "Rol asignado correctamente.");
+            } else {
+                empleadoRolDAO.edit(registroSeleccionado);
+
+                mensaje(FacesMessage.SEVERITY_INFO,
+                        "Éxito", "Asignación actualizada correctamente.");
+            }
+
+            nuevoRegistro();
+            cargarDatos();
+
+        } catch (Exception e) {
+            LOGGER.log(Level.SEVERE,
+                    "Error al guardar la asignación", e);
+
+            mensaje(FacesMessage.SEVERITY_ERROR,
+                    "Error", "No se pudo guardar la asignación.");
+        }
+    }
+
+    public void desactivar(EmpleadoRol asignacion) {
+        if (asignacion == null
+                || asignacion.getIdEmpleadoRol() == null) {
+            mensaje(FacesMessage.SEVERITY_WARN,
+                    "Aviso", "Selecciona una asignación válida.");
             return;
         }
 
         try {
-            // Buscar objetos por sus UUIDs
-            Empleado empObj = null;
-            for (Empleado e : listaEmpleados) {
-                if (e.getIdEmpleado().equals(idEmpleadoSeleccionado)) {
-                    empObj = e;
-                    break;
-                }
+            asignacion.setActivo(false);
+            empleadoRolDAO.edit(asignacion);
+
+            if (registroSeleccionado != null
+                    && asignacion.getIdEmpleadoRol().equals(
+                            registroSeleccionado.getIdEmpleadoRol())) {
+                nuevoRegistro();
             }
 
-            Rol rolObj = null;
-            for (Rol r : listaRoles) {
-                if (r.getIdRol().equals(idRolSeleccionado)) {
-                    rolObj = r;
-                    break;
-                }
-            }
+            cargarDatos();
 
-            if (empObj == null || rolObj == null) {
-                mensajeError("Empleado o Rol no encontrado.");
-                return;
-            }
-
-            // Validar que el empleado esté activo
-            if (!Boolean.TRUE.equals(empObj.getActivo())) {
-                mensajeError("No se puede asignar rol a un empleado inactivo.");
-                return;
-            }
-
-            // Validar que el rol esté activo
-            if (!Boolean.TRUE.equals(rolObj.getActivo())) {
-                mensajeError("No se puede asignar un rol inactivo.");
-                return;
-            }
-
-            // Crear la relación EmpleadoRol
-            EmpleadoRol nuevoER = new EmpleadoRol();
-            nuevoER.setIdEmpleadoRol(UUID.randomUUID());
-            nuevoER.setIdEmpleado(empObj);
-            nuevoER.setIdRol(rolObj);
-            nuevoER.setActivo(true);
-
-            empleadoRolDAO.create(nuevoER);
-
-            mensajeInfo("Rol " + rolObj.getNombre() + " asignado a " + empObj.getNombre() + " exitosamente.");
-
-            // Limpiar selecciones
-            this.idEmpleadoSeleccionado = null;
-            this.idRolSeleccionado = null;
+            mensaje(FacesMessage.SEVERITY_INFO,
+                    "Éxito", "Asignación desactivada correctamente.");
 
         } catch (Exception e) {
-            e.printStackTrace();
-            mensajeError("Error al guardar la asignación: " + e.getMessage());
+            LOGGER.log(Level.SEVERE,
+                    "Error al desactivar la asignación", e);
+
+            mensaje(FacesMessage.SEVERITY_ERROR,
+                    "Error", "No se pudo desactivar la asignación.");
         }
     }
 
-    // Mensajes auxiliares JSF
-    private void mensajeInfo(String msg) {
-        FacesContext.getCurrentInstance().addMessage(null,
-                new FacesMessage(FacesMessage.SEVERITY_INFO, "Éxito", msg));
+    private void mensaje(FacesMessage.Severity severidad,
+                         String titulo, String detalle) {
+        FacesContext.getCurrentInstance().addMessage(
+                null, new FacesMessage(severidad, titulo, detalle));
     }
 
-    private void mensajeWarn(String msg) {
-        FacesContext.getCurrentInstance().addMessage(null,
-                new FacesMessage(FacesMessage.SEVERITY_WARN, "Advertencia", msg));
+    // Getters y setters
+
+    public List<EmpleadoRol> getListaAsignaciones() {
+        return listaAsignaciones;
     }
 
-    private void mensajeError(String msg) {
-        FacesContext.getCurrentInstance().addMessage(null,
-                new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", msg));
-    }
-
-    // Getters y Setters
     public List<Empleado> getListaEmpleados() {
         return listaEmpleados;
     }
 
     public List<Rol> getListaRoles() {
         return listaRoles;
+    }
+
+    public EmpleadoRol getRegistroSeleccionado() {
+        return registroSeleccionado;
+    }
+
+    public void setRegistroSeleccionado(
+            EmpleadoRol registroSeleccionado) {
+        this.registroSeleccionado = registroSeleccionado;
     }
 
     public UUID getIdEmpleadoSeleccionado() {

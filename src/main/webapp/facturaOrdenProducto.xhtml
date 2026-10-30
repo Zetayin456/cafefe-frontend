@@ -26,9 +26,12 @@
                 <h:panelGroup style="margin-top:10px; display:block">
                     <p:commandButton value="Guardar" actionListener="#{facturaOrdenProductoFrm.btnGuardarHandler}" update="frmFacturaOrdenProducto" styleClass="ui-button-success" style="margin-right:10px" />
                     <p:commandButton value="Nuevo" actionListener="#{facturaOrdenProductoFrm.nuevoRegistro}" update="frmFacturaOrdenProducto" styleClass="ui-button-secondary" style="margin-right:10px" />
-                    <p:commandButton value="Eliminar" actionListener="#{facturaOrdenProductoFrm.btnEliminarHandler}" update="frmFacturaOrdenProducto" styleClass="ui-button-danger" icon="pi pi-trash" />
+                    <p:commandButton value="Eliminar" actionListener="#{facturaOrdenProductoFrm.btnEliminarHandler}" update="frmFacturaOrdenProducto" styleClass="ui-button-danger" icon="pi pi-trash">
+                        <p:confirm header="Confirmar eliminación" message="¿Desea eliminar el registro seleccionado?" icon="pi pi-exclamation-triangle" />
+                    </p:commandButton>
                 </h:panelGroup>
             </p:panel>
+            <p:confirmDialog global="true"><p:commandButton value="Sí" type="button" styleClass="ui-confirmdialog-yes ui-button-danger"/><p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary"/></p:confirmDialog>
 
             <p:panel header="Listado Factura Orden Producto">
                 <p:dataTable var="fop" value="#{facturaOrdenProductoFrm.modelo}" lazy="true" paginator="true" rows="5"

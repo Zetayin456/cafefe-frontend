@@ -10,26 +10,46 @@
     <ui:define name="header_titulo">Tipos de Característica</ui:define>
 
     <ui:define name="contenido">
+        <h:form id="frmNuevo">
+            <p:panel header="Datos del tipo de característica" style="margin-top: 1rem;">
+                <h:panelGrid columns="2" cellpadding="5">
+                    <p:outputLabel for="id" value="ID (Autogenerado):" />
+                    <p:inputText id="id" value="#{tipoCaracteristicaBean.registro.idTipoCaracteristica}" disabled="true" placeholder="UUID Automático" />
+
+                    <p:outputLabel for="nombre" value="Nombre:" />
+                    <p:inputText id="nombre" value="#{tipoCaracteristicaBean.registro.nombre}" required="true" />
+
+                    <p:outputLabel for="expresion" value="Expresión Regular:" />
+                    <p:inputText id="expresion" value="#{tipoCaracteristicaBean.registro.expresionRegular}" placeholder="Ej: ^\d+$" />
+
+                    <p:outputLabel for="activo" value="Activo:" />
+                    <p:selectBooleanCheckbox id="activo" value="#{tipoCaracteristicaBean.registro.activo}" />
+
+                    <p:outputLabel for="observaciones" value="Observaciones:" />
+                    <p:inputTextarea id="observaciones" value="#{tipoCaracteristicaBean.registro.observaciones}" rows="3" cols="30" />
+                </h:panelGrid>
+
+                <br/>
+                <p:commandButton value="Guardar"
+                                 actionListener="#{tipoCaracteristicaBean.guardar()}"
+                                 update=":frmTabla:dtTipoCaracteristica :messages"
+                                 icon="pi pi-check" />
+                <p:commandButton value="Limpiar" actionListener="#{tipoCaracteristicaBean.limpiar()}" update="frmNuevo" icon="pi pi-eraser" styleClass="ui-button-secondary" />
+            </p:panel>
+        </h:form>
+
         <h:form id="frmTabla">
             <p:panel header="Gestión de Tipos de Característica">
-                <p:commandButton value="Nuevo Tipo Característica" 
-                                 actionListener="#{tipoCaracteristicaBean.limpiar()}" 
-                                 update=":dialogNuevo" 
-                                 oncomplete="PF('dlgNuevo').show()" 
-                                 icon="pi pi-plus" />
-
-                <p:button value="Volver a Tipo Descuento" 
-                          outcome="TipoDescuento" 
-                          icon="pi pi-arrow-left" 
-                          styleClass="ui-button-secondary" 
+                <p:button value="Volver a Tipo Descuento"
+                          outcome="TipoDescuento"
+                          icon="pi pi-arrow-left"
+                          styleClass="ui-button-secondary"
                           style="margin-left: 10px;" />
 
-                <br/><br/>
-
-                <p:dataTable id="dtTipoCaracteristica" 
-                             value="#{tipoCaracteristicaBean.lista}" 
-                             var="row" 
-                             paginator="true" 
+                <p:dataTable id="dtTipoCaracteristica"
+                             value="#{tipoCaracteristicaBean.lista}"
+                             var="row"
+                             paginator="true"
                              rows="10">
 
                     <p:column headerText="ID">
@@ -53,44 +73,21 @@
                     </p:column>
 
                     <p:column headerText="Acciones">
-                        <p:commandButton icon="pi pi-pencil" 
-                                         update=":dialogNuevo" 
-                                         oncomplete="PF('dlgNuevo').show()" 
+                        <p:commandButton icon="pi pi-pencil"
+                                         update=":frmNuevo"
                                          process="@this">
                             <f:setPropertyActionListener value="#{row}" target="#{tipoCaracteristicaBean.registro}" />
                         </p:commandButton>
+                        <p:commandButton icon="pi pi-trash" title="Eliminar" action="#{tipoCaracteristicaBean.eliminar(row)}" update=":frmTabla:dtTipoCaracteristica :messages">
+                            <p:confirm header="Confirmar eliminación" message="¿Desea eliminar este tipo de característica?" icon="pi pi-exclamation-triangle" />
+                        </p:commandButton>
                     </p:column>
                 </p:dataTable>
+                <p:confirmDialog global="true"><p:commandButton value="Sí" type="button" styleClass="ui-confirmdialog-yes ui-button-danger"/><p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary"/></p:confirmDialog>
             </p:panel>
         </h:form>
 
-        <p:dialog header="Datos de Tipo de Característica" widgetVar="dlgNuevo" id="dialogNuevo" modal="true" responsive="true">
-            <h:form id="frmNuevo">
-                <h:panelGrid columns="2" cellpadding="5">
-                    <p:outputLabel for="id" value="ID (Autogenerado):" />
-                    <p:inputText id="id" value="#{tipoCaracteristicaBean.registro.idTipoCaracteristica}" disabled="true" placeholder="UUID Automático" />
 
-                    <p:outputLabel for="nombre" value="Nombre:" />
-                    <p:inputText id="nombre" value="#{tipoCaracteristicaBean.registro.nombre}" required="true" />
-
-                    <p:outputLabel for="expresion" value="Expresión Regular:" />
-                    <p:inputText id="expresion" value="#{tipoCaracteristicaBean.registro.expresionRegular}" placeholder="Ej: ^\d+$" />
-
-                    <p:outputLabel for="activo" value="Activo:" />
-                    <p:selectBooleanCheckbox id="activo" value="#{tipoCaracteristicaBean.registro.activo}" />
-
-                    <p:outputLabel for="observaciones" value="Observaciones:" />
-                    <p:inputTextarea id="observaciones" value="#{tipoCaracteristicaBean.registro.observaciones}" rows="3" cols="30" />
-                </h:panelGrid>
-
-                <br/>
-                <p:commandButton value="Guardar" 
-                                 actionListener="#{tipoCaracteristicaBean.guardar()}" 
-                                 update=":frmTabla:dtTipoCaracteristica :messages" 
-                                 oncomplete="if (!args.validationFailed) PF('dlgNuevo').hide()" 
-                                 icon="pi pi-check" />
-            </h:form>
-        </p:dialog>
     </ui:define>
 
 </ui:composition>

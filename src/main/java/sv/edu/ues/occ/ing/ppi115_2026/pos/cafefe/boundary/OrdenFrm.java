@@ -8,15 +8,13 @@ import jakarta.inject.Inject;
 import jakarta.inject.Named;
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-import sv.edu.ues.occ.ing.ppi115_2026.pos.cafefe.control.EmpleadoRolDAOInterface;
-import sv.edu.ues.occ.ing.ppi115_2026.pos.cafefe.control.OrdenDAO;
-import sv.edu.ues.occ.ing.ppi115_2026.pos.cafefe.control.ProductoDAOInterface;
 import sv.edu.ues.occ.ing.ppi115_2026.pos.cafefe.entity.*;
+import sv.edu.ues.occ.ing.ppi115_2026.pos.cafefe.service.OrdenService;
+import sv.edu.ues.occ.ing.ppi115_2026.pos.cafefe.service.DescuentoService;
 
 @Named("ordenFrm")
 @ViewScoped
@@ -25,13 +23,10 @@ public class OrdenFrm implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Inject
-    private OrdenDAO ordenDAO;
+    private OrdenService ordenService;
 
     @Inject
-    private EmpleadoRolDAOInterface empleadoRolDAO;
-
-    @Inject
-    private ProductoDAOInterface productoDAO;
+    private DescuentoService descuentoService;
 
     private Orden registroSeleccionado;
     private List<Orden> registros;
@@ -52,27 +47,37 @@ public class OrdenFrm implements Serializable {
 
     public void cargarDatos() {
         try {
-            this.registros = ordenDAO.obtenerTodos();
-            this.listaProductos = productoDAO.findRange(0, 100);
-
-            List<EmpleadoRol> todosRoles = empleadoRolDAO.findRange(0, 100);
-            this.listaCamareros = new ArrayList<>();
-            if (todosRoles != null) {
-                for (EmpleadoRol er : todosRoles) {
-                    if (er.getIdRol() != null && er.getIdRol().getNombre() != null) {
-                        String nombreRol = er.getIdRol().getNombre().trim();
-                        
-                        // Permite reconocer "Camarero", "CAMARERO", "camarero", etc.
-                        if ("CAMARERO".equalsIgnoreCase(nombreRol) && Boolean.TRUE.equals(er.getActivo())) {
-                            this.listaCamareros.add(er);
-                        }
-                    }
-                }
-            }
+            this.registros = ordenService.listar();
+            this.listaProductos = ordenService.listarProductosDisponibles();
+            this.listaCamareros = ordenService.listarCamarerosDisponibles();
         } catch (Exception e) {
             mensajeError("Error al cargar datos del formulario de órdenes.");
         }
     }
+
+
+    public void seleccionarOrden(Orden orden) {
+    if (orden == null) {
+        return;
+    }
+
+    try {
+        this.registroSeleccionado = orden;
+
+        this.itemsOrden = new ArrayList<>();
+
+        if (orden.getOrdenProductoList() != null) {
+            this.itemsOrden.addAll(orden.getOrdenProductoList());
+        }
+
+        this.productoSeleccionado = null;
+        this.observacionItem = "";
+
+        mensajeInfo("Orden seleccionada para editar.");
+    } catch (Exception e) {
+        mensajeError("No se pudo cargar la orden para editar.");
+    }
+}
 
     public void agregarProducto() {
         if (productoSeleccionado == null) {
@@ -83,16 +88,16 @@ public class OrdenFrm implements Serializable {
     OrdenProducto nuevoItem = new OrdenProducto();
     nuevoItem.setIdOrdenProducto(UUID.randomUUID());
     nuevoItem.setIdProducto(productoSeleccionado);
-    
+
     // ASIGNAR LA RELACIÓN DE LA ORDEN PADRE
-    nuevoItem.setIdOrden(this.registroSeleccionado); 
-    
+    nuevoItem.setIdOrden(this.registroSeleccionado);
+
     nuevoItem.setPrecio(productoSeleccionado.getPrecioSugerido());
-    nuevoItem.setObservaciones(observacionItem != null && !observacionItem.trim().isEmpty() 
+    nuevoItem.setObservaciones(observacionItem != null && !observacionItem.trim().isEmpty()
             ? observacionItem : "Precio base sugerido.");
 
     this.itemsOrden.add(nuevoItem);
-    
+
     this.productoSeleccionado = null;
     this.observacionItem = "";
     mensajeInfo("Producto agregado a la orden.");
@@ -105,41 +110,63 @@ public class OrdenFrm implements Serializable {
         }
     }
 
-    public void btnGuardarHandler() {
-      if (this.registroSeleccionado.getIdEmpleadoRol() == null) {
-        mensajeError("Debe seleccionar un empleado camarero.");
-        return;
-    }
+ public void btnGuardarHandler() {
 
-    if (this.itemsOrden == null || this.itemsOrden.isEmpty()) {
-        mensajeWarn("Debe agregar al menos un producto a la orden.");
+    if (registroSeleccionado == null) {
+        mensajeError("Selecciona una orden válida.");
         return;
     }
 
     try {
-        if (this.registroSeleccionado.getIdOrden() == null) {
-            // 1. Asignar ID a la orden
-            this.registroSeleccionado.setIdOrden(UUID.randomUUID());
-
-            // 2. Enlazar cada detalle con esta orden padre
-            for (OrdenProducto op : this.itemsOrden) {
-                op.setIdOrden(this.registroSeleccionado);
-            }
-            this.registroSeleccionado.setOrdenProductoList(this.itemsOrden);
-
-            // 3. Persistir
-            ordenDAO.crear(this.registroSeleccionado);
-            mensajeInfo("Orden creada exitosamente.");
-        } else {
-            ordenDAO.modificar(this.registroSeleccionado);
-            mensajeInfo("Orden modificada correctamente.");
-        }
+        boolean esNueva = registroSeleccionado.getIdOrden() == null;
+        ordenService.guardar(registroSeleccionado, itemsOrden);
+        mensajeInfo(esNueva ? "Orden creada exitosamente." : "Orden modificada correctamente.");
 
         limpiarFormulario();
+
     } catch (Exception e) {
-        mensajeError("Error al guardar la orden: " + e.getMessage());
+        mensajeError("No se pudo guardar la orden: " + e.getMessage());
     }
+}
+
+
+ public void nuevaOrden() {
+    registroSeleccionado = new Orden();
+    registroSeleccionado.setFechaCreacion(new Date());
+
+    itemsOrden = new ArrayList<>();
+    productoSeleccionado = null;
+    observacionItem = "";
+
+    mensajeInfo("Formulario preparado para una nueva orden.");
+}
+
+
+ public void eliminarOrden(Orden orden) {
+    if (orden == null) {
+        mensajeError("Debe seleccionar una orden.");
+        return;
     }
+
+    try {
+        ordenService.eliminar(orden);
+
+        mensajeInfo("Orden eliminada correctamente.");
+
+        if (registroSeleccionado != null
+                && orden.equals(registroSeleccionado)) {
+            nuevaOrden();
+        }
+
+        cargarDatos();
+
+    } catch (Exception e) {
+        mensajeError(
+                "No se pudo eliminar la orden. Puede tener restricciones "
+                + "en la base de datos."
+        );
+    }
+}
 
     private void limpiarFormulario() {
         this.registroSeleccionado = new Orden();
@@ -156,72 +183,36 @@ public class OrdenFrm implements Serializable {
         return er != null && er.getIdRol() != null && "CAMARERO".equalsIgnoreCase(er.getIdRol().getNombre());
     }
 
-    public void aplicarDescuentosPorFecha() {
-        Date fechaOrden = registroSeleccionado.getFechaCreacion();
-
-        if (fechaOrden == null) {
-            mensajeWarn("Debe definir la fecha de la orden.");
-            return;
-        }
-
-        for (OrdenProducto item : itemsOrden) {
-            Producto prod = item.getIdProducto();
-            boolean descuentoAplicado = false;
-
-            if (prod != null && prod.getDescuentoProductoList() != null) {
-                for (DescuentoProducto dp : prod.getDescuentoProductoList()) {
-                    // Evaluación sobre DescuentoProducto
-                    if (dp.getFechaDesde() != null && dp.getFechaHasta() != null) {
-                        if (!fechaOrden.before(dp.getFechaDesde()) && !fechaOrden.after(dp.getFechaHasta())) {
-                            BigDecimal nuevoPrecio = calcularPrecioConDescuento(prod.getPrecioSugerido(), dp.getValor());
-                            item.setPrecio(nuevoPrecio);
-                            item.setObservaciones("Descuento de " + dp.getValor() + "% aplicado por rango de fechas.");
-                            descuentoAplicado = true;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (!descuentoAplicado) {
-                item.setPrecio(prod != null ? prod.getPrecioSugerido() : BigDecimal.ZERO);
-                item.setObservaciones("Descuento no aplicable (Fecha de orden fuera del rango vigente).");
-            }
-        }
-        mensajeInfo("Cálculo de descuentos por fecha finalizado.");
+    public List<DescuentoProducto> getDescuentosDisponibles(OrdenProducto item) {
+        Date fecha = registroSeleccionado != null ? registroSeleccionado.getFechaCreacion() : null;
+        return item != null ? descuentoService.disponibles(item.getIdProducto(), fecha) : List.of();
     }
 
-    public void aplicarDescuentoAbierto() {
-        for (OrdenProducto item : itemsOrden) {
-            Producto prod = item.getIdProducto();
-            boolean descuentoAplicado = false;
-
-            if (prod != null && prod.getDescuentoProductoList() != null) {
-                for (DescuentoProducto dp : prod.getDescuentoProductoList()) {
-                    // Descuento abierto: fechaHasta es nula
-                    if (dp.getFechaHasta() == null) {
-                        BigDecimal nuevoPrecio = calcularPrecioConDescuento(prod.getPrecioSugerido(), dp.getValor());
-                        item.setPrecio(nuevoPrecio);
-                        item.setObservaciones("Descuento abierto del " + dp.getValor() + "% aplicado.");
-                        descuentoAplicado = true;
-                        break;
-                    }
-                }
-            }
-
-            if (!descuentoAplicado) {
-                item.setPrecio(prod != null ? prod.getPrecioSugerido() : BigDecimal.ZERO);
-                item.setObservaciones("Sin descuento abierto disponible.");
-            }
-        }
-        mensajeInfo("Cálculo de descuento abierto finalizado.");
+    public String etiquetaDescuento(DescuentoProducto descuento) {
+        if (descuento == null) return "";
+        String nombre = descuento.getIdDescuento() != null ? descuento.getIdDescuento().getNombre() : "Descuento";
+        String vigencia = descuento.getFechaHasta() == null ? "vigencia abierta" : "vigente por fechas";
+        return nombre + " — " + descuento.getValor() + "% (" + vigencia + ")";
     }
 
-    private BigDecimal calcularPrecioConDescuento(BigDecimal precioOriginal, Integer porcentaje) {
-        if (precioOriginal == null || porcentaje == null) return precioOriginal;
-        BigDecimal desc = BigDecimal.valueOf(porcentaje).divide(BigDecimal.valueOf(100));
-        BigDecimal montoDescuento = precioOriginal.multiply(desc);
-        return precioOriginal.subtract(montoDescuento).setScale(2, RoundingMode.HALF_UP);
+    public BigDecimal totalOrden(Orden orden) {
+        if (orden == null || orden.getOrdenProductoList() == null) return BigDecimal.ZERO;
+        return orden.getOrdenProductoList().stream()
+                .filter(item -> item != null && item.getPrecio() != null)
+                .map(OrdenProducto::getPrecio)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public void aplicarDescuentoSeleccionado(OrdenProducto item) {
+        if (item == null || item.getIdProducto() == null) return;
+        UUID idSeleccionado = item.getIdDescuentoProductoSeleccionado();
+        try {
+            descuentoService.aplicar(item, idSeleccionado,
+                    registroSeleccionado != null ? registroSeleccionado.getFechaCreacion() : null);
+            mensajeInfo("Descuento aplicado al producto.");
+        } catch (IllegalArgumentException e) {
+            mensajeWarn(e.getMessage());
+        }
     }
 
     private void mensajeError(String msg) {

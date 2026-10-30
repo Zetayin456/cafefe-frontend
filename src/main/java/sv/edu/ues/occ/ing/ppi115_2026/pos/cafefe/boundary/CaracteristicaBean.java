@@ -38,7 +38,7 @@ public class CaracteristicaBean implements Serializable {
 
     public void cargarLista() {
         if (caracteristicaDAO != null) {
-            this.lista = caracteristicaDAO.findRange(0, 100);
+            this.lista = caracteristicaDAO.findAllWithRelations();
         }
     }
 
@@ -60,6 +60,17 @@ public class CaracteristicaBean implements Serializable {
     public void guardar() {
         try {
             if (registro != null && caracteristicaDAO != null) {
+                TipoCaracteristica tipo = registro.getIdTipoCaracteristica();
+                if (tipo == null || tipo.getIdTipoCaracteristica() == null) {
+                    mostrarMensaje("Validación", "Selecciona un tipo de característica activo.");
+                    return;
+                }
+                tipo = tipoCaracteristicaDAO.find(tipo.getIdTipoCaracteristica());
+                if (tipo == null || !Boolean.TRUE.equals(tipo.getActivo())) {
+                    mostrarMensaje("Validación", "No se puede asignar un tipo de característica inactivo.");
+                    return;
+                }
+                registro.setIdTipoCaracteristica(tipo);
                 if (registro.getIdCaracteristica() == null) {
                     registro.setIdCaracteristica(UUID.randomUUID());
                     caracteristicaDAO.create(registro);
@@ -74,6 +85,18 @@ public class CaracteristicaBean implements Serializable {
         } catch (Exception e) {
             mostrarMensaje("Error", "No se pudo guardar la característica: " + e.getMessage());
         }
+    }
+
+    public void eliminar(Caracteristica caracteristica) {
+        try {
+            caracteristicaDAO.remove(caracteristica);
+            mostrarMensaje("Éxito", "Característica eliminada correctamente");
+        } catch (Exception e) {
+            FacesContext.getCurrentInstance().addMessage(null,
+                    new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "No se pudo eliminar la característica: " + e.getMessage()));
+        }
+        limpiar();
+        cargarLista();
     }
 
     private void mostrarMensaje(String resumen, String detalle) {

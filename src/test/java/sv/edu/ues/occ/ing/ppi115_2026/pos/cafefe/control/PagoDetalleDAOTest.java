@@ -53,13 +53,13 @@ public class PagoDetalleDAOTest {
         List<PagoDetalle> listaEsperada = new ArrayList<>();
         listaEsperada.add(new PagoDetalle());
 
-        when(em.createQuery("SELECT pd FROM PagoDetalle pd", PagoDetalle.class)).thenReturn(query);
+        when(em.createQuery("SELECT pd FROM PagoDetalle pd LEFT JOIN FETCH pd.idPago ORDER BY pd.idPagoDetalle", PagoDetalle.class)).thenReturn(query);
         when(query.getResultList()).thenReturn(listaEsperada);
 
         List<PagoDetalle> resultado = pagoDetalleDAO.obtenerTodos();
 
         assertNotNull(resultado);
         assertEquals(1, resultado.size());
-        verify(em, times(1)).createQuery("SELECT pd FROM PagoDetalle pd", PagoDetalle.class);
+        verify(em, times(1)).createQuery("SELECT pd FROM PagoDetalle pd LEFT JOIN FETCH pd.idPago ORDER BY pd.idPagoDetalle", PagoDetalle.class);
     }
 }

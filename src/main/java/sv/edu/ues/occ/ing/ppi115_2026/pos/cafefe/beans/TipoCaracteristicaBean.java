@@ -39,9 +39,30 @@ public class TipoCaracteristicaBean implements Serializable {
         this.registro.setActivo(true);
     }
 
+    public void seleccionar(TipoCaracteristica tipo) { this.registro = tipo; }
+    public void eliminar(TipoCaracteristica tipo) {
+        try {
+            dao.remove(tipo);
+            mostrarMensaje("Éxito", "Tipo de característica eliminado correctamente");
+        } catch (Exception e) {
+            FacesContext.getCurrentInstance().addMessage(null, new FacesMessage(FacesMessage.SEVERITY_ERROR, "Error", "No se pudo eliminar el tipo: " + e.getMessage()));
+        }
+        limpiar();
+        cargarLista();
+    }
+
     public void guardar() {
         try {
             if (registro != null && dao != null) {
+                String expresion = registro.getExpresionRegular();
+                if (expresion != null && !expresion.isBlank()) {
+                    try {
+                        java.util.regex.Pattern.compile(expresion);
+                    } catch (java.util.regex.PatternSyntaxException ex) {
+                        mostrarMensaje("Validación", "La expresión regular no es válida: " + ex.getDescription());
+                        return;
+                    }
+                }
                 if (registro.getIdTipoCaracteristica() == null) {
                     registro.setIdTipoCaracteristica(UUID.randomUUID());
                     dao.create(registro);

@@ -18,6 +18,7 @@
                 
                 <p:commandButton value="Guardar" actionListener="#{tipoCaracteristicaBean.guardar()}" 
                                  update="frmTipoCaracteristica :messages" icon="pi pi-save" />
+                <p:commandButton value="Nuevo" action="#{tipoCaracteristicaBean.limpiar()}" update="frmTipoCaracteristica" immediate="true" icon="pi pi-plus" />
             </p:panel>
 
             <p:spacer height="20" />
@@ -29,7 +30,14 @@
                 <p:column headerText="Nombre">
                     <h:outputText value="#{tc.nombre}" />
                 </p:column>
+                <p:column headerText="Acciones">
+                    <p:commandButton icon="pi pi-pencil" action="#{tipoCaracteristicaBean.seleccionar(tc)}" update="frmTipoCaracteristica" title="Editar" />
+                    <p:commandButton icon="pi pi-trash" action="#{tipoCaracteristicaBean.eliminar(tc)}" update="frmTipoCaracteristica :messages" title="Eliminar">
+                        <p:confirm header="Confirmar eliminación" message="¿Desea eliminar este tipo?" icon="pi pi-exclamation-triangle" />
+                    </p:commandButton>
+                </p:column>
             </p:dataTable>
+            <p:confirmDialog global="true"><p:commandButton value="Sí" type="button" styleClass="ui-confirmdialog-yes ui-button-danger"/><p:commandButton value="No" type="button" styleClass="ui-confirmdialog-no ui-button-secondary"/></p:confirmDialog>
         </h:form>
     </ui:define>
 

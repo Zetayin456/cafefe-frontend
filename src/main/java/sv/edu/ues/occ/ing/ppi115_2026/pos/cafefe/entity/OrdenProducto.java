@@ -11,6 +11,7 @@ import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.io.Serializable;
@@ -40,6 +41,9 @@ public class OrdenProducto implements Serializable {
 
     @Column(name = "precio")
     private BigDecimal precio;
+
+    @Transient
+    private UUID idDescuentoProductoSeleccionado;
 
     @OneToMany(mappedBy = "idOrdenProducto", fetch = FetchType.LAZY)
     private List<FacturaOrdenProducto> facturaOrdenProductoList;
@@ -73,6 +77,14 @@ public class OrdenProducto implements Serializable {
 
     public void setPrecio(BigDecimal precio) {
         this.precio = precio;
+    }
+
+    public UUID getIdDescuentoProductoSeleccionado() {
+        return idDescuentoProductoSeleccionado;
+    }
+
+    public void setIdDescuentoProductoSeleccionado(UUID idDescuentoProductoSeleccionado) {
+        this.idDescuentoProductoSeleccionado = idDescuentoProductoSeleccionado;
     }
 
     public List<FacturaOrdenProducto> getFacturaOrdenProductoList() {

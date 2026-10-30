@@ -5,6 +5,7 @@ import jakarta.ejb.Stateless;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import java.io.Serializable;
+import java.util.List;
 
 @Stateless
 public class TipoProductoDAO extends DefaultDAO<TipoProducto>
@@ -20,5 +21,11 @@ public class TipoProductoDAO extends DefaultDAO<TipoProducto>
     @Override
     protected EntityManager getEntityManager() {
         return em;
+    }
+
+    @Override
+    public List<TipoProducto> findActivos() {
+        return em.createQuery("SELECT t FROM TipoProducto t WHERE t.activo = TRUE ORDER BY t.nombre", TipoProducto.class)
+                .getResultList();
     }
 }

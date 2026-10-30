@@ -1,0 +1,186 @@
+.
+├── estructura_proyecto.txt
+├── nbactions.xml
+├── nb-configuration.xml
+├── pom.xml
+└── src
+    ├── main
+    │   ├── java
+    │   │   └── sv
+    │   │       └── edu
+    │   │           └── ues
+    │   │               └── occ
+    │   │                   └── ing
+    │   │                       └── ppi115_2026
+    │   │                           └── pos
+    │   │                               ├── cafefe
+    │   │                               │   ├── beans
+    │   │                               │   │   ├── CajaBean.java
+    │   │                               │   │   ├── PagoBean.java
+    │   │                               │   │   ├── ProductoBean.java
+    │   │                               │   │   ├── SesionUsuario.java
+    │   │                               │   │   ├── TipoCaracteristicaBean.java
+    │   │                               │   │   └── TipoDescuentoFrm.java
+    │   │                               │   ├── boundary
+    │   │                               │   │   ├── CaracteristicaBean.java
+    │   │                               │   │   ├── DescuentoFrm.java
+    │   │                               │   │   ├── DescuentoProductoFrm.java
+    │   │                               │   │   ├── EmpleadoFrm.java
+    │   │                               │   │   ├── EmpleadoRolFrm.java
+    │   │                               │   │   ├── FacturaFrm.java
+    │   │                               │   │   ├── FacturaOrdenProductoFrm.java
+    │   │                               │   │   ├── frmTipoCaracteristica.java
+    │   │                               │   │   ├── OrdenFrm.java
+    │   │                               │   │   ├── OrdenProductoFrm.java
+    │   │                               │   │   ├── PagoDetalleBean.java
+    │   │                               │   │   ├── PagoDetalleFrm.java
+    │   │                               │   │   ├── ProductoCaracteristicaFrm.java
+    │   │                               │   │   ├── ProductoFrm.java
+    │   │                               │   │   ├── ProductoTipoProductoFrm.java
+    │   │                               │   │   ├── RolFrm.java
+    │   │                               │   │   └── TipoProductoFrm.java
+    │   │                               │   ├── control
+    │   │                               │   │   ├── CajaDAOInterface.java
+    │   │                               │   │   ├── CajaDAO.java
+    │   │                               │   │   ├── CaracteristicaDAOInterface.java
+    │   │                               │   │   ├── CaracteristicaDAO.java
+    │   │                               │   │   ├── DaoInterface.java
+    │   │                               │   │   ├── DefaultDAO.java
+    │   │                               │   │   ├── DescuentoDAOInterface.java
+    │   │                               │   │   ├── DescuentoDAO.java
+    │   │                               │   │   ├── DescuentoProductoDAOInterface.java
+    │   │                               │   │   ├── DescuentoProductoDAO.java
+    │   │                               │   │   ├── EmpleadoDAOInterface.java
+    │   │                               │   │   ├── EmpleadoDAO.java
+    │   │                               │   │   ├── EmpleadoRolDAOInterface.java
+    │   │                               │   │   ├── EmpleadoRolDAO.java
+    │   │                               │   │   ├── FacturaDAOInterface.java
+    │   │                               │   │   ├── FacturaDAO.java
+    │   │                               │   │   ├── FacturaOrdenProductoDAO.java
+    │   │                               │   │   ├── OrdenDAO.java
+    │   │                               │   │   ├── OrdenProductoDAO.java
+    │   │                               │   │   ├── PagoDAOInterface.java
+    │   │                               │   │   ├── PagoDAO.java
+    │   │                               │   │   ├── PagoDetalleDAO.java
+    │   │                               │   │   ├── ProductoCaracteristicaDAOInterface.java
+    │   │                               │   │   ├── ProductoCaracteristicaDAO.java
+    │   │                               │   │   ├── ProductoDAOInterface.java
+    │   │                               │   │   ├── ProductoDAO.java
+    │   │                               │   │   ├── ProductoTipoProductoDAOInterface.java
+    │   │                               │   │   ├── ProductoTipoProductoDAO.java
+    │   │                               │   │   ├── RolDAOInterface.java
+    │   │                               │   │   ├── RolDAO.java
+    │   │                               │   │   ├── TipoCaracteristicaDAOInterface.java
+    │   │                               │   │   ├── TipoCaracteristicaDAO.java
+    │   │                               │   │   ├── TipoDescuentoDAOInterface.java
+    │   │                               │   │   ├── TipoDescuentoDAO.java
+    │   │                               │   │   ├── TipoProductoDAOInterface.java
+    │   │                               │   │   └── TipoProductoDAO.java
+    │   │                               │   ├── entity
+    │   │                               │   │   ├── Caja.java
+    │   │                               │   │   ├── Caracteristica.java
+    │   │                               │   │   ├── Descuento.java
+    │   │                               │   │   ├── DescuentoProducto.java
+    │   │                               │   │   ├── Empleado.java
+    │   │                               │   │   ├── EmpleadoRol.java
+    │   │                               │   │   ├── Factura.java
+    │   │                               │   │   ├── FacturaOrdenProducto.java
+    │   │                               │   │   ├── Orden.java
+    │   │                               │   │   ├── OrdenProducto.java
+    │   │                               │   │   ├── PagoDetalle.java
+    │   │                               │   │   ├── Pago.java
+    │   │                               │   │   ├── ProductoCaracteristica.java
+    │   │                               │   │   ├── Producto.java
+    │   │                               │   │   ├── ProductoTipoProducto.java
+    │   │                               │   │   ├── Rol.java
+    │   │                               │   │   ├── TipoCaracteristica.java
+    │   │                               │   │   ├── TipoDescuento.java
+    │   │                               │   │   └── TipoProducto.java
+    │   │                               │   ├── JakartaRestConfiguration.java
+    │   │                               │   ├── modelo
+    │   │                               │   │   └── TipoCaracteristicaModel.java
+    │   │                               │   └── resources
+    │   │                               │       └── JakartaEE11Resource.java
+    │   │                               └── entity
+    │   │                                   └── converter
+    │   │                                       ├── EntityConverter.java
+    │   │                                       ├── TipoCaracteristicaConverter.java
+    │   │                                       ├── UuidConverter.java
+    │   │                                       └── UuidFacesConverter.java
+    │   ├── liberty
+    │   │   └── config
+    │   │       └── server.xml
+    │   ├── resources
+    │   │   ├── META-INF
+    │   │   │   └── persistence.xml
+    │   │   └── traducciones
+    │   │       ├── crud_en.properties
+    │   │       ├── crud_es.properties
+    │   │       ├── crud.properties
+    │   │       └── crud_zh_CN.properties
+    │   └── webapp
+    │       ├── caja.xhtml
+    │       ├── caracteristica.xhtml
+    │       ├── DescuentoProducto.xhtml
+    │       ├── Descuento.xhtml
+    │       ├── EmpleadoRol.xhtml
+    │       ├── Empleado.xhtml
+    │       ├── facturaOrdenProducto.xhtml
+    │       ├── factura.xhtml
+    │       ├── index.html
+    │       ├── ordenProducto.xhtml
+    │       ├── orden.xhtml
+    │       ├── pagoDetalle.xhtml
+    │       ├── pago.xhtml
+    │       ├── ProductoCaracteristica.xhtml
+    │       ├── ProductoTipoProducto.xhtml
+    │       ├── producto.xhtml
+    │       ├── resources
+    │       │   ├── botones
+    │       │   │   └── botones_arriba.xhtml
+    │       │   └── css
+    │       │       └── estilos.css
+    │       ├── Rol.xhtml
+    │       ├── tipo_caracteristica.xhtml
+    │       ├── tipoCaracteristica.xhtml
+    │       ├── tipo-descuento.html
+    │       ├── TipoDescuento.xhtml
+    │       ├── TipoProducto.xhtml
+    │       └── WEB-INF
+    │           ├── beans.xml
+    │           ├── beans.xml.bak
+    │           ├── plantillas
+    │           │   └── general.xhtml
+    │           └── web.xml
+    └── test
+        └── java
+            └── sv
+                └── edu
+                    └── ues
+                        └── occ
+                            └── ing
+                                └── ppi115_2026
+                                    └── pos
+                                        └── cafefe
+                                            └── control
+                                                ├── CajaDAOTest.java
+                                                ├── CaracteristicaDAOTest.java
+                                                ├── DescuentoDAOTest.java
+                                                ├── DescuentoProductoDAOTest.java
+                                                ├── EmpleadoDAOTest.java
+                                                ├── EmpleadoRolDAOTest.java
+                                                ├── FacturaDAOTest.java
+                                                ├── FacturaOrdenProductoDAOTest.java
+                                                ├── OrdenDAOTest.java
+                                                ├── OrdenProductoDAOTest.java
+                                                ├── PagoDAOTest.java
+                                                ├── PagoDetalleDAOTest.java
+                                                ├── ProductoCaracteristicaDAOTest.java
+                                                ├── ProductoDAOTest.java
+                                                ├── ProductoTipoProductoDAOTest.java
+                                                ├── RolDAOTest.java
+                                                ├── TipoCaracteristicaDAOTest.java
+                                                ├── TipoDescuentoDAOTest.java
+                                                └── TipoProductoDAOTest.java
+
+42 directories, 142 files

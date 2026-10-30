@@ -48,6 +48,71 @@ body {
 .content-area {
     flex-grow: 1;
     padding: 25px;
+    min-width: 0;
+}
+
+/* Flujo común de mantenimiento: formulario primero, listado después. */
+.content-area form {
+    margin-bottom: 1rem;
+}
+
+.content-area .ui-panel,
+.content-area .ui-card {
+    box-sizing: border-box;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+/* Algunas vistas antiguas envolvían formulario y tabla en columnas. */
+.content-area > div[style*="display: flex"] {
+    flex-direction: column !important;
+    align-items: stretch;
+    gap: 1rem !important;
+}
+
+.content-area > div[style*="display: flex"] > div {
+    flex: 1 1 auto !important;
+    width: 100% !important;
+    min-width: 0 !important;
+}
+
+/* Presentación uniforme para las tablas de administración. */
+.content-area .ui-datatable {
+    width: 100%;
+    margin-top: 1rem;
+}
+
+.content-area .ui-datatable-tablewrapper {
+    overflow-x: auto;
+}
+
+.content-area .ui-datatable thead th {
+    white-space: nowrap;
+    text-align: left;
+}
+
+.content-area .ui-datatable tbody td {
+    vertical-align: middle;
+}
+
+.content-area .ui-datatable .ui-button {
+    margin: 0 0.15rem;
+}
+
+@media (max-width: 900px) {
+    .main-layout {
+        flex-direction: column;
+    }
+
+    .sidebar-menu {
+        width: auto;
+        border-right: 0;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .content-area {
+        padding: 1rem;
+    }
 }
 
 /* Botón Nuevo Azul */
